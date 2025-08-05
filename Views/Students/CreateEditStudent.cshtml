@@ -1,0 +1,89 @@
+<style>
+    .step-nav {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .step-nav .step-button {
+        flex: 1;
+        margin: 0 5px;
+        background-color: #e9ecef;
+        border: none;
+        padding: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .step-nav .step-button.active {
+        background-color: #007bff;
+        color: white;
+        using Microsoft.EntityFrameworkCore.Metadata.Internal;
+    }
+
+    .step-nav .step-button.disabled {
+        background-color: #ccc;
+        color: #666;
+        cursor: not-allowed;
+    }
+</style>
+
+@{
+    var fromButton = ViewBag.FromButtom == "Create" ? "Add" : ViewBag.fromButton == "Edit" ? "Edit" : "View";
+}
+<input type="hidden" id="stid" value="0" />
+
+<div class="container mt-4">
+    <!--Nav Tabs-->
+    <div class="step-nav" id="studentTabs"">
+        <button class=" step-button active" data-tab="basic-info">Basic Info</button>
+        <button class="step-button disabled" data-tab="course-selection">Course Selection</button>
+        <button class="step-button disabled" data-tab="account">Account</button>
+    </div>
+    <!--Tab Content-->
+    <div id="tab-content" class="mt-4">
+        <!--content for the active tab-->
+    </div>
+
+</div>
+<script>
+    $(document).ready(function () {
+        var formButton = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(fromButton));
+        $('.closeBtn').on('click', function () {
+            debugger;
+            // Redirect to the Index page
+            window.location.href = '/Students/Index'; // Replace with the correct URL for your Index page
+        });
+        //load the first tab content
+        loadTabContent('basic-info', formButton);
+        //handle tab button click
+        $('.step-nav').on('click', '.step-button', function () {
+            debugger;
+            if ($(this).hasClass('disabled')) return;//ignore disabeld tabs
+            //activate the clicked tab
+            $('.step-button').removeClass('active');
+            $(this).addClass('active');
+            //load the corresponding tab content
+            const tab = $(this).data('tab');
+            var studentId = $('#stid').val();
+            loadTabContent(tab, formButton, studentId);
+        })
+
+        //function to load tab content dynamically
+        function loadTabContent(tab, editType, studentId) {
+            debugger;
+            $.ajax({
+                url: `/Students/GetTabContent?tab=${tab}&editType=${editType}&studentId=${studentId}`,
+                type: 'GET',
+                success: function (response) {
+                    debugger;
+                    $('#tab-content').html(response)
+                },
+                error: function () {
+                    alert('failed to load tab content');
+                }
+            });
+        }
+    })
+</script>

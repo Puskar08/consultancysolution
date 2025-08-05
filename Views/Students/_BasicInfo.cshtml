@@ -1,0 +1,128 @@
+@model Students
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<div id="basic-info" class="tab-pane active">
+    <form id="studentForm" ifeditmode eidt then disable>
+        <input type="hidden" id="studentId" name="StudentId" value="@Model.Id">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Name</label>
+                <input type="text" class="form-control" name="Name" value="@Model.Name" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Email</label>
+                <input type="email" class="form-control" name="Email" value="@Model.Email" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Phone</label>
+                <input type="text" class="form-control" name="Phone" value="@Model.Phone" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Address</label>
+                <input type="text" class="form-control" name="Address" value="@Model.Address">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Date of Birth</label>
+                <input type="date" class="form-control" name="DateOfBirth"
+                    value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Admission Date</label>
+                <input type="date" class="form-control" name="AdmissionDate"
+                    value="@Model.AdmissionDate.ToString("yyyy-MM-dd")" required>
+            </div>
+        </div>
+        @{
+            if (ViewBag.editmode == "Add")
+            {
+                <button type="submit" class="btn btn-primary float-right" data-buttonType="add">Save</button>
+            }
+            else if (ViewBag.EditMode == "Edit")
+            {
+                <button id="editBasicInfo" class="btn btn-warning float-right">Edit</button>
+                <button id="updateBasicInfo" class="btn btn-success float-right" data-buttonType="edit"
+                    style="display:none;">Update</button>
+            }
+            <button type="button" class="closeBtn btn btn-secondary float-right mr-2"
+                onclick="window.location.href='/Students/Index';" style="">Close</button>
+        }
+    </form>
+</div>
+<script>
+    $(document).ready(function () {
+        let clickedButtonType = null;
+        let orginalBasicInfo = null;
+        function getInfoFromDataInObject() {
+            orginalBasicInfo = {
+                name: $('input[name="Name"]').val(),
+                email: $('input[name="Email"]').val(),
+                phone: $('input[name="Phone"]').val(),
+                address: $('input[name="Address"]').val(),
+                dateOfBirth: $('input[name="DateOfBirth"]').val(),
+                admissionDate: $('input[name="AdmissionDate"]').val()
+            };
+        }
+        function fillUpInfoFormFromSavedObject() {
+            $('input[name="Name"]').val(orginalBasicInfo.name);
+            $('input[name="Email"]').val(orginalBasicInfo.email);
+            $('input["name="Phone]').val(orginalBasicInfo.phone);
+            $('input[name="Address"]').val(orginalBasicInfo.address);
+            $('input[name="DateOfBirth"]').val(orginalBasicInfo.dateOfBirth);
+            $('input[name="AdmissionDate"]').val(orginalBasicInfo.admissionDate);
+        }
+        $('#editBasicInfo').on('click', function () {
+            getInfoFromDataInObject();
+            $('#studentForm input').prop('disabled', false);
+            $('#updateBasicInfo').show();
+            $('#cancelBasicInfo').show();
+        })
+        $('#cancelBasicInfo').on('click', function () {
+            //fill the form with the last saved record
+            fillUpInfoFormFromSavedObject();
+            $('#editBasicInfo').show();
+            $('#cancelBasicInfo').hide();
+            $('#updateBasicInfo').hide();
+
+        });
+        $('#studentForm button[type="submit"]').on('click', function (e) {
+            debugger;
+            clickedButtonType = this.dataset.buttontype;
+        })
+        function toggleStudentForm() {
+            $('#studentForm input').prop('disabled', false);
+            $('#updatebasicInfo').show();
+            $('#cancelBasicInfo').show();
+        }
+        $('#studentForm').on('submit', function (e) {
+            debugger;
+            e.preventDefault();
+            let stringUrl = clickedButtonType == "add" ? '/Students/CreateStudentOnly' : '/Students/ModifyStudent';
+            const formData = $(this).serialize();
+            $.ajax({
+                url: stringUrl,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    debugger;
+                    alert('basic info saved successfully, continure to course selection');
+                    $('#tab-content').html(response)
+                    $('#stid').val($('#studentId').val());// Update student ID for course selection
+                    //loadTabContent(); can load page from the server side again
+                    //or dynamically update the form 
+                    //assuming if its a success form data are valid just make them disabled
+                    $('#studentForm input').prop('disabled', true);
+                    $('#studentForm [type="submit"]').prop('hidden', true);
+                    $('#editBasicInfo').show();
+                    getInfoFromDataInObject();
+                    // Enable next tabs
+                    $('[data-tab="course-selection"]').removeClass('disabled');
+                    $('[data-tab="account"]').removeClass('disabled');
+                    // Populate course dropdown
+                    const dropdown = $('#courseDropdown');
+                    dropdown.empty().append('<option value="">-- Select Course --</option>');
+                    $('[data-tab="course-selection"]').click();
+
+                }
+            });
+        })
+    })
+</script>

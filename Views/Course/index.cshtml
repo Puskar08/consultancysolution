@@ -1,0 +1,52 @@
+@model IEnumerable<consultancysolution.Models.Course>
+
+@{
+    ViewData["Title"] = "Courses";
+}
+<style>
+    /* Add hover effect for course cards */
+    .course-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        z-index: 0;
+        position: relative;
+    }
+
+    .course-card:hover {
+        transform: scale(1.05);
+        /* Slightly enlarge the card */
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        /* Add shadow effect */
+        z-index: 10;
+        /* Bring the card to the front */
+    }
+</style>
+
+<div class="container mt-4">
+    <h1 class="text-center">Our Courses</h1>
+    <p class="text-center">Explore the wide range of courses we offer to help you achieve your goals.</p>
+    <a asp-action="Create" class="btn btn-success mb-3">Add New Course</a>
+
+    <div class="row">
+        @foreach (var course in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <!-- Make the entire card clickable -->
+                <a asp-action="Details" asp-route-id="@course.Id" class="text-decoration-none text-dark">
+                    <div class="card course-card">
+                        <img src="@course.Image" class="card-img-top" alt="@course.Name"
+                            style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">@course.Name</h5>
+                            <p class="card-text">@course.Description</p>
+                            <p class="card-text"><strong>Duration:</strong> @course.Duration</p>
+                            <p class="card-text"><strong>Price:</strong> $@course.Price</p>
+                            @* <a asp-action="Edit" asp-route-id="@course.Id" class="btn btn-secondary">Edit</a>
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                data-id="@course.Id" data-name="@course.Name">Delete</button> *@
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+</div>

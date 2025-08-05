@@ -1,0 +1,61 @@
+@model IEnumerable<Students>
+@{
+    ViewData["Title"] = "Students";
+}
+<div class="container mt-4">
+    <h1 class="text-center">Students</h1>
+    <p class="text-center">Explore the wide range of students we have.</p>
+    <a asp-action="Create" class="btn btn-success mb-3">Add New Student</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Date of Birth</th>
+                <th>Admission Date</th>
+                <th>Admission Cost</th>
+                <th>Courses</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in Model)
+            {
+                <tr>
+                    <td>@student.Id</td>
+                    <td>@student.Name</td>
+                    <td>@student.Email</td>
+                    <td>@student.Address</td>
+                    <td>@student.Phone</td>
+                    <td>@student.DateOfBirth.ToShortDateString()</td>
+                    <td>@student.AdmissionDate.ToShortDateString()</td>
+                    <td>@student.AdmissionCost.ToString("C")</td>
+                    <td>
+                        @if (student.StudentCourses != null && student.StudentCourses.Any())
+                        {
+                            foreach (var course in student.StudentCourses)
+                            {
+                                <a asp-action="Details" asp-controller="Course" asp-route-id="@course.CourseId"
+                                    class="btn btn-primary btn-sm me-1">
+                                    @course.Course.Name
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">No Courses</span>
+                        }
+                    </td>
+                    <td>
+                        @* <a asp-action="Edit" asp-route-id="@student.Id" class="btn btn-secondary">Edit</a> *@
+                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-id="@student.Id" data-name="@student.Name">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+</div>

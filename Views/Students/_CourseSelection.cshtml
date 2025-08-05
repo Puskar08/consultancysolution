@@ -1,0 +1,170 @@
+@model List<consultancysolution.Models.SelectedCourseDto>
+@{
+    var courses = ViewBag.Courses as List<consultancysolution.Models.Course>;
+}
+
+<div id="course-selection" class="tab-pane">
+    <div class="form-group">
+        <label>Select Courses:</label>
+        <select id="courseDropdown" class="form-control">
+            <option value="">-- Select Course --</option>
+            @if (courses != null)
+            {
+                foreach (var course in courses)
+                {
+                    <option value="@course.Id" data-name="@course.Name" data-price="@course.Price">
+                        @course.Name (@course.Price)
+                    </option>
+                }
+            }
+        </select>
+    </div>
+
+    </br>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Course Fee</th>
+                <th>Discount</th>
+                <th>Modified Fee</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="selectedCourses">
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.Id">
+                    <td>@item.CourseName<input type="hidden" name="@item.CourseName" value="@item.Id" /></td>
+                    <td>@item.Price<input type="hidden" name="@item.Price" value="@item.Price" /></td>
+                    <td><input type="number" name="Discount" class="form-control discount" value="@item.Discount" /></td>
+                    <td class="modifiedFee">@item.ModifiedCoursePrice </td>
+                    <td><button type="button" class="btn btn-danger btn-sm delete-row"><i class="fa fa-trash"></i></button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @{
+        if (ViewBag.EditMode == "Add")
+        {
+            @* <button type="submit" class="btn btn-primary float-right" data-buttonType="add">Save</button> *@
+            <button id="saveCourses" class="btn btn-primary float-right">Save</button>
+        }
+        else if (ViewBag.EditMode == "Edit")
+        {
+            <button id="editCourses" class="btn btn-warning float-right">Edit</button>
+            <button id="updateCourseSelection" class="btn btn-success float-right" data-buttonType="edit"
+                style="display:none;">Update</button>
+            <button id="cancelCourseSelection" class="btn btn-secondary float-right mr-2" style="display:none;">Cancel</button>
+        }
+        <button type="button" class="closeBtn btn btn-secondary float-right mr-2"
+            onclick="window.location.href='/Students/Index';" style="">Close</button>
+    }
+</div>
+
+<script>
+    let addedCourses = new Set();
+
+    $('#courseDropdown').on('change', function () {
+        debugger;
+        const selectedOption = $(this).find('option:selected');
+        const courseId = selectedOption.val();
+        const courseName = selectedOption.data('name');
+        const coursePrice = parseFloat(selectedOption.data('price'));
+
+        if (!courseId || addedCourses.has(courseId)) return;
+
+        const newRow = `
+                    <tr data-id="${courseId}">
+                        <td>${courseName}<input type="hidden" name="Courses[${courseId}].Id" value="${courseId}" /></td>
+                        <td>${coursePrice}<input type="hidden" name="Courses[${courseId}].Price" value="${coursePrice}" /></td>
+                        <td>
+                            <input type="number" name="Courses[${courseId}].Discount" class="form-control discount" value="0" min="0" />
+                        </td>
+                        <td class="modifiedFee">${coursePrice}</td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm delete-row">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+        $('#selectedCourses').append(newRow);
+        addedCourses.add(courseId);
+        $(this).val('');
+    });
+
+    // Update Modified Fee on discount input
+    $('#selectedCourses').on('input', '.discount', function () {
+        const row = $(this).closest('tr');
+        const price = parseFloat(row.find('input[name$=".Price"]').val());
+        const discount = parseFloat($(this).val()) || 0;
+        const modified = Math.max(0, price - discount);
+        row.find('.modifiedFee').text(modified.toFixed(2));
+    });
+
+    // Delete course row
+    $('#selectedCourses').on('click', '.delete-row', function () {
+        const row = $(this).closest('tr');
+        const courseId = row.data('id');
+        row.remove();
+        addedCourses.delete(String(courseId));
+    });
+
+    // Save courses
+    $('#saveCourses').on('click', function () {
+        debugger;
+        const studentId = $('#stid').val();
+        const data = [];
+
+        $('#selectedCourses tr').each(function () {
+            const row = $(this);
+            data.push({
+                Id: row.data('id'), // This is CourseId
+                Price: parseFloat(row.find('input[name$=".Price"]').val()),
+                Discount: parseFloat(row.find('input[name$=".Discount"]').val()) || 0
+            });
+        });
+
+        $.ajax({
+            url: `/Students/SaveCourses?studentId=${studentId}`, // <- Pass as query param
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data), // <- Just the array body
+            success: function (response) {
+                debugger;
+                alert('Courses saved successfully.');
+                $('#tab-content').html(response)
+                //$('#stid').val($('#stid').val());
+                // Disable all form elements
+                $('#courseDropdown').prop('disabled', true);
+                $('#selectedCourses input.discount').prop('disabled', true);
+                $('#selectedCourses .delete-row').prop('disabled', true);
+
+                // Hide save, show edit
+                $('#saveCourses').hide();
+                $('#editCourses').show();
+                $('.closeBtn').show();
+                $('[data-tab="account"]').removeClass('disabled');
+                $('[data-tab="account"]').click();
+            },
+            error: function () {
+                alert('Error saving courses.');
+            }
+        });
+    });
+    $('#editCourses').on('click', function () {
+        // Enable course selection and discount editing
+        $('#courseDropdown').prop('disabled', false);
+        $('#selectedCourses input.discount').prop('disabled', false);
+        $('#selectedCourses .delete-row').prop('disabled', false);
+
+        // Toggle buttons
+        $('#editCourses').hide();
+        $('#saveCourses').show();
+        $('#cancel').show();
+    });
+
+</script>

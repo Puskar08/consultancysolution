@@ -1,0 +1,6 @@
+# Ignore all DLL files
+*.dll
+
+# Optional: Ignore build folders
+bin/
+obj/

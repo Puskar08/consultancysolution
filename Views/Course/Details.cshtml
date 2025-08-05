@@ -1,0 +1,70 @@
+@model consultancysolution.Models.Course
+
+@{
+    ViewData["Title"] = "Course Details";
+}
+
+<div class="container mt-4">
+    <h1 class="text-center">@Model.Name</h1>
+    <div class="row align-items-center">
+        <div class="col-md-6 d-flex justify-content-end">
+            <img src="@Model.Image" alt="@Model.Name" class="img-fluid rounded"
+                style="max-height: 400px; object-fit: cover;">
+        </div>
+        <div class="col-md-6">
+            @* <h1 class="mb-3">@Model.Name</h1> *@
+            <h3>Course Details</h3>
+            <p><strong>Description:</strong> @Model.Description</p>
+            <p><strong>Duration:</strong> @Model.Duration</p>
+            <p><strong>Price:</strong> $@Model.Price</p>
+            <p><strong>Category:</strong> @Model.Category</p>
+            <a href="/Course" class="btn btn-secondary">Back to Courses</a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="@Model.Id"
+                data-name="@Model.Name">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the course <strong id="courseName"></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" asp-action="Delete">
+                    <input type="hidden" id="courseId" name="id" />
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Pass course details to the modal
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget; // Button that triggered the modal
+        const courseId = button.getAttribute('data-id'); // Extract course ID
+        const courseName = button.getAttribute('data-name'); // Extract course name
+
+        // Update modal content
+        document.getElementById('courseId').value = courseId;
+        document.getElementById('courseName').textContent = courseName;
+        //store the button reference for later use
+        deleteModal.relatedButton = button;
+    });
+    // Remove focus from the button when the modal is hidden
+    deleteModal.addEventListener('hidden.bs.modal', function () {
+        if (deleteModal.relatedButton) {
+            deleteModal.relatedButton.blur();
+        }
+    });
+</script>
