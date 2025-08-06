@@ -1,0 +1,109 @@
+@model consultancysolution.Models.AdmissionFeeDto
+<div class="AdmissionInfo">
+    <h5>Admission Fee</h5>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Admission Fee</th>
+                <th>Discount</th>
+                <th>Modified Fee</th>
+                <th>Paid</th>
+                <th>Due</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="admissionFeeRow">
+                @if (Model != null)
+                {
+                    <td><input id="admissionFee" type="number" value="@Model.AdmissionFee" /></td>
+                    <td><input class="form-control disabled" type="number" id="admissionFeeDiscount"
+                            value="@Model.Discount" /></td>
+
+                    @* <td><input class="form-control" type="number" id="modifiedAdmissionFee"
+                            value="@Model.ModifiedAdmissionFee" disabled />
+                    </td> *@
+                    <td><span id="modifiedAdmissionFee"
+                            >@Model.ModifiedAdmissionFee" </span>
+                    </td>
+                    <td><input type="number" class="form-control" id="paidAdmissionAmount" value="@Model.Paid" /></td>
+                    @* <td><input class="form-control" type="number" id="dueAdmissionAmount" value="@Model.Due" disabled /></td> *@
+                    <td><span id="dueAdmissionAmount">@Model.Due</span></td>
+                }
+                else
+                {
+                    <td><input class="form-control" type="number" id="admissionFee" value="@(Model?.AdmissionFee ?? 0)" />
+                    </td>
+                    <td><input class="form-control" type="number" id="admissionFeeDiscount"
+                            value="@(Model?.Discount ?? 0)" /></td>
+                    <td><input class="form-control" type="number" id="modifiedAdmissionFee"
+                            value="@(Model?.ModifiedAdmissionFee ?? 0)" readonly /></td>
+                    <td><input type="number" id="paidAdmissionAmount" value="0" /></td>
+                    <td><input class="form-control" type="number" id="dueAdmissionAmount" value="@(Model?.Due ?? 0)"
+                            readonly /></td>
+                }
+            </tr>
+        </tbody>
+    </table>
+    @{
+        if(ViewBag.AdmissionFormMode == "Edit")
+        {
+            <button id="editAdmissionFee" class="btn btn-warning float-right">Edit</button>
+            <button id="updateAdmissionFee" class="btn btn-primary float-right" style="display:none;">Update Admission Fee</button>
+            <button id="cancelAdmissionFee" class="btn btn-secondary float-right mr-2" style="display:none;">Cancel</button>
+        }
+        else
+        {
+            <button id="saveAdmissionFee" class="btn btn-primary float-right">Save Admission Fee</button>
+        }
+    }
+    @* <button id="saveAdmissionFee" class="btn btn-success float-right mb-4">Save Admission Fee</button> *@
+    <button type="button" class="closeBtn btn btn-secondary float-right mr-2" onclick="window.location.href='/Students/Index';">Close</button>
+</div>
+<script>
+
+    @* $('#admissionFeeRow').on('input', '#admissionFee, #admissionFeeDiscount, #paidAdmissionAmount', function () {
+        const admissionFee = parseFloat($('#admissionFee').val()) || 0;
+        const discount = parseFloat($('#admissionFeeDiscount').val()) || 0;
+        const paid = parseFloat($('#paidAdmissionAmount').val()) || 0;
+
+        const modifiedFee = Math.max(0, admissionFee - discount);
+        const due = Math.max(0, modifiedFee - paid);
+
+        $('#modifiedAdmissionFee').text(modifiedFee.toFixed(2));
+        $('#dueAdmissionAmount').text(due.toFixed(2));
+    }); *@
+
+    function getValue(selector) {
+        const el = $(selector);
+        if (el.is('input')) {
+            return parseFloat(el.val()) || 0;
+        } else {
+            return parseFloat(el.text()) || 0;
+        }
+    }
+    function updateCalculatedFields() {
+        debugger;
+        const admissionFee = getValue("#admissionFee");
+        const discount = getValue("#admissionFeeDiscount");
+        const paid = getValue("#paidAdmissionAmount");
+
+        const modifiedFee = Math.max(0, admissionFee - discount);
+        const due = Math.max(0, modifiedFee - paid);
+
+        //$("#modifiedAdmissionFee").text(modifiedFee.toFixed(2));
+        $("#modifiedAdmissionFee").val(modifiedFee.toFixed(2));
+        $("#dueAdmissionAmount").val(due.toFixed(2));
+    }
+    $("#admissionFeeDiscount, #paidAdmissionAmount").on("input", updateCalculatedFields);
+
+    $('#editAdmissionFee').on("click", function () {
+        $("#admissionFeeDiscount, #paidAdmissionAmount").prop("disabled", false);
+        $("#updateAdmissionFee, #cancelAdmissionFee").show();
+        $(this).hide();
+    });
+    $('#cancelAdmissionFee').on("click", function () {
+        debugger;
+        loadTabContent(tab, mode, studentId);
+        //$('[data-tab="account"]').click();
+    });
+</script>

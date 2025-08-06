@@ -1,5 +1,5 @@
 
-namespace CourseManagementSystem.Models
+namespace consultancysolution.Models
 {
     public class CoursePaymentDto
     {

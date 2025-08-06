@@ -28,12 +28,12 @@
         cursor: not-allowed;
     }
 </style>
-
 @{
-    var fromButton = ViewBag.FromButtom == "Create" ? "Add" : ViewBag.fromButton == "Edit" ? "Edit" : "View";
+    string mode = ViewData["Mode"]?.ToString() ?? "View";
+    int studentId = (int)(ViewData["StudentId"] ?? 0);
 }
-<input type="hidden" id="stid" value="0" />
-
+<input type="hidden" id="StudentID" value="@studentId" />
+<input type="hidden" id="mode" value="@mode" />
 <div class="container mt-4">
     <!--Nav Tabs-->
     <div class="step-nav" id="studentTabs"">
@@ -49,14 +49,14 @@
 </div>
 <script>
     $(document).ready(function () {
-        var formButton = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(fromButton));
+        var mode = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(mode));
         $('.closeBtn').on('click', function () {
             debugger;
             // Redirect to the Index page
             window.location.href = '/Students/Index'; // Replace with the correct URL for your Index page
         });
         //load the first tab content
-        loadTabContent('basic-info', formButton);
+        loadTabContent('basic-info', mode);
         //handle tab button click
         $('.step-nav').on('click', '.step-button', function () {
             debugger;
@@ -66,15 +66,15 @@
             $(this).addClass('active');
             //load the corresponding tab content
             const tab = $(this).data('tab');
-            var studentId = $('#stid').val();
-            loadTabContent(tab, formButton, studentId);
+            var studentId = $('#StudentID').val();
+            loadTabContent(tab, mode, studentId);
         })
 
         //function to load tab content dynamically
-        function loadTabContent(tab, editType, studentId) {
+        function loadTabContent(tab, pageMode, studentId) {
             debugger;
             $.ajax({
-                url: `/Students/GetTabContent?tab=${tab}&editType=${editType}&studentId=${studentId}`,
+                url: `/Students/GetTabContent?tab=${tab}&pageMode=${pageMode}&studentId=${studentId}`,
                 type: 'GET',
                 success: function (response) {
                     debugger;

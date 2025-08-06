@@ -47,26 +47,23 @@
     </table>
 
     @{
-        if (ViewBag.EditMode == "Add")
-        {
-            @* <button type="submit" class="btn btn-primary float-right" data-buttonType="add">Save</button> *@
-            <button id="saveCourses" class="btn btn-primary float-right">Save</button>
-        }
-        else if (ViewBag.EditMode == "Edit")
+        if (ViewBag.courseSelectionMode == "Edit")
         {
             <button id="editCourses" class="btn btn-warning float-right">Edit</button>
-            <button id="updateCourseSelection" class="btn btn-success float-right" data-buttonType="edit"
-                style="display:none;">Update</button>
+            <button id="updateCourseSelection" class="btn btn-success float-right" style="display:none;">Update</button>
             <button id="cancelCourseSelection" class="btn btn-secondary float-right mr-2" style="display:none;">Cancel</button>
         }
-        <button type="button" class="closeBtn btn btn-secondary float-right mr-2"
-            onclick="window.location.href='/Students/Index';" style="">Close</button>
+        else
+        {
+            <button id="saveCourses" class="btn btn-primary float-right">Save</button>
+        }
+        <button type="button" class="closeBtn btn btn-secondary float-right mr-2" onclick="window.location.href='/Students/Index';">Close</button>
     }
 </div>
 
 <script>
     let addedCourses = new Set();
-
+    //on doropdown change
     $('#courseDropdown').on('change', function () {
         debugger;
         const selectedOption = $(this).find('option:selected');
@@ -114,9 +111,8 @@
     });
 
     // Save courses
-    $('#saveCourses').on('click', function () {
-        debugger;
-        const studentId = $('#stid').val();
+    function saveCourses(){
+        const studentId = $('#StudentID').val();
         const data = [];
 
         $('#selectedCourses tr').each(function () {
@@ -137,16 +133,7 @@
                 debugger;
                 alert('Courses saved successfully.');
                 $('#tab-content').html(response)
-                //$('#stid').val($('#stid').val());
-                // Disable all form elements
-                $('#courseDropdown').prop('disabled', true);
-                $('#selectedCourses input.discount').prop('disabled', true);
-                $('#selectedCourses .delete-row').prop('disabled', true);
 
-                // Hide save, show edit
-                $('#saveCourses').hide();
-                $('#editCourses').show();
-                $('.closeBtn').show();
                 $('[data-tab="account"]').removeClass('disabled');
                 $('[data-tab="account"]').click();
             },
@@ -154,17 +141,20 @@
                 alert('Error saving courses.');
             }
         });
+    }
+    $('#saveCourses ,#updateCourses').on('click', function () {
+        saveCourses();
     });
+    // Edit courses
     $('#editCourses').on('click', function () {
-        // Enable course selection and discount editing
-        $('#courseDropdown').prop('disabled', false);
-        $('#selectedCourses input.discount').prop('disabled', false);
-        $('#selectedCourses .delete-row').prop('disabled', false);
-
-        // Toggle buttons
-        $('#editCourses').hide();
-        $('#saveCourses').show();
-        $('#cancel').show();
+        $('#selectedCourses .discount').prop('disabled', false);
+        $('#updateCourseSelection, #cancelCourseSelection').show();
+        $(this).hide();
+    });
+    // Cancel course selection
+    $('#cancelCourseSelection').on('click', function () {
+        loadTabContent("course-selection", mode, studentId);
+        //$('[data-tab="course-selection"]').click();
     });
 
 </script>

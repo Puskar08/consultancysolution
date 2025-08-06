@@ -1,172 +1,86 @@
 @model consultancysolution.Models.AccountDto
-<!-- Account -->
-<div id="account" class="tab-pane" style="">
-    <h5>Admission Fee</h5>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Admission Fee</th>
-                <th>Discount</th>
-                <th>Modified Fee</th>
-                <th>Paid</th>
-                <th>Due</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr id="admissionFeeRow">
-                @if (Model.Admission != null)
-                {
-                    <td><span id="admissionFee">@Model.Admission.AdmissionFee</span></td>
-                    <td><input class="form-control disabled" type="number" id="admissionFeeDiscount"
-                            value="@Model.Admission.Discount" /></td>
-                    <td><span id="modifiedAdmissionFee">@Model.Admission.ModifiedAdmissionFee</span></td>
-                    <td><input type="number" id="paidAdmissionAmount" value="@Model.Admission.Paid" /></td>
-                    <td><span id="dueAdmissionAmount">@Model.Admission.Due</span></td>
-                }
-                else
-                {
-                    <td><input class="form-control" type="number" id="admissionFee" value="1000" /></td>
-                    <td><input class="form-control" type="number" id="admissionFeeDiscount" value="0" /></td>
-                    <td><span id="modifiedAdmissionFee">0</span></td>
-                    <td><input type="number" id="paidAdmissionAmount" value="0" /></td>
-                    <td><span id="dueAdmissionAmount">0</span></td>
-                }
-            </tr>
-        </tbody>
-    </table>
-    <button id="saveAdmissionFee" class="btn btn-success float-right mb-4">Save Admission Fee</button>
-    @* <button id="editAdmissionFee" class="btn btn-warning float-right" style="display:none;">Edit Admission
-        Fee</button>
-    <button id="updateAdmissionFee" class="btn btn-success float-right" style="display:none;">Update
-        Admission Fee</button> *@
 
-    <h5>Course Payments</h5>
-    <table class="table table-bordered" id="coursePaymentTable">
-        <thead>
-            <tr>
-                <th>Course</th>
-                <th>Cost</th>
-                <th>Paid</th>
-                <th>Due</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var coursePayment in Model.CoursePayments)
-            {
-                <tr data-course-id="@coursePayment.CourseId">
-                    <td>@coursePayment.CourseName</td>
-                    <td>@coursePayment.Price</td>
-                    <td><input type="number" class="form-control paidAmount" value="@coursePayment.PaidAmount" /></td>
-                    <td class="dueAmount">@coursePayment.DueAmount</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    <button id="saveCoursePayments" class="btn btn-success float-right">Save Course Payments</button>
+<div id="account" class="tab-pane" style="">
+    <div class="admission-container">
+        <partial name="_AdmissionInfo" model="Model.Admission" />
+    </div>
+    <div class="coursePayment-ontainer">
+        <partial name="_CoursePaymentInfo" model="Model.CoursePayments" />
+    </div>
 </div>
 <script>
-    const studentId = $('#stid').val();
-    $('#admissionFeeRow').on('input', '#admissionFee, #admissionFeeDiscount, #paidAdmissionAmount', function () {
-        const admissionFee = parseFloat($('#admissionFee').val()) || 0;
-        const discount = parseFloat($('#admissionFeeDiscount').val()) || 0;
-        const paid = parseFloat($('#paidAdmissionAmount').val()) || 0;
-
-        const modifiedFee = Math.max(0, admissionFee - discount);
-        const due = Math.max(0, modifiedFee - paid);
-
-        $('#modifiedAdmissionFee').text(modifiedFee.toFixed(2));
-        $('#dueAdmissionAmount').text(due.toFixed(2));
-    });
-
-    $(document).ready(function () {
-
-        function updateCalculatedFields() {
-            const admissionFee = parseFloat($("#admissionFee").text()) || 0;
-            const discount = parseFloat($("#discount").val()) || 0;
-            const paid = parseFloat($("#paid").val()) || 0;
-
-            const modifiedFee = Math.max(0, admissionFee - discount);
-            const due = Math.max(0, modifiedFee - paid);
-
-            $("#modifiedFee").text(modifiedFee.toFixed(2));
-            $("#due").text(due.toFixed(2));
-        }
-
-        $("#discount, #paid").on("input", updateCalculatedFields);
-        updateCalculatedFields(); // initialize
-    });
-
-    $("#saveAdmissionFee").click(function () {
-        debugger;
-        const admissionFee = parseFloat($("#admissionFee").val()) || 0;
+    const studentId = $('#StudentID').val();
+    
+    //save admission fee
+    function saveAdmissionFee(url){
+        const admissionFee = parseFloat($("#admissionFee").text()) || 0;
         const discount = parseFloat($("#admissionFeeDiscount").val()) || 0;
         const modifiedFee = parseFloat($("#modifiedAdmissionFee").text()) || 0;
         const paid = parseFloat($("#paidAdmissionAmount").val()) || 0;
         const due = parseFloat($("#dueAdmissionAmount").text()) || 0;
 
         const payload = {
-            StudentId: studentId, // make sure studentId is defined somewhere above
-            Admission: {
                 AdmissionFee: admissionFee,
                 Discount: discount,
                 ModifiedAdmissionFee: modifiedFee,
                 Paid: paid,
                 Due: due
-            },
-            CoursePayments: [] // optional, or pass actual data if needed
         };
 
         $.ajax({
-            url: `/Students/SaveAdmissionFee?studentId=${studentId}`,
+            url: url,
             type: 'POST',
             data: JSON.stringify(payload),
             contentType: 'application/json',
             success: function (response) {
                 alert("Admission Fee Saved");
-                $('#tab-content').html(response);
+                $('#admission-container').html(response);
             },
             error: function () {
                 alert("Error saving admission fee");
             }
         });
+    }
+    $("#saveAdmissionFee, #updateAdmissionFee").click(function () {
+        saveAdmissionFee(`/Students/SaveAdmissionFee?studentId=${studentId}`);
     });
-
-    $('#saveCoursePayments').click(function () {
-        debugger;
+    
+    //save course payments
+    function submitCoursePayments(url){
         const coursePayments = [];
-
         $("#coursePaymentTable tbody tr").each(function () {
             const row = $(this);
             const courseId = row.data("course-id");
-            const price = parseFloat(row.find(".price").text()) || 0;
+            const price = parseFloat(row.find("td:nth-child(2)").text()) || 0;
             const paid = parseFloat(row.find(".paidAmount").val()) || 0;
-            const due = Math.max(0, modifiedFee - paid);
+            const due = Math.max(0, price - paid);
 
             // Update the UI values
-            row.find(".modifiedFee").text(modifiedFee.toFixed(2));
             row.find(".dueAmount").text(due.toFixed(2));
 
             coursePayments.push({
                 CourseId: courseId,
                 Price: price,
-                Discount: discount,
-                ModifiedCoursePrice: modifiedFee,
                 PaidAmount: paid,
                 DueAmount: due
             });
         });
         $.ajax({
-            url: '/Students/SaveAdmissionFee',
+            url: url,
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(payload),
+            data: JSON.stringify(coursePayments),
             success: function (response) {
+                $('#coursePayment-container').html(response);
                 alert("Course Payments Saved");
-                $('#tab-content').html(response);
             },
             error: function () {
                 alert("Error saving course payments");
             }
         });
+    }
+    $('#saveCoursePayments, #updateCoursePayments').click(function () {
+        const saveUrl = `/Students/SaveCoursePayments?studentId=${studentId}`;
+        submitCoursePayments(saveUrl);
     })
 </script>

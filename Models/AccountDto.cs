@@ -1,4 +1,4 @@
-using CourseManagementSystem.Models;
+using consultancysolution.Models;
 
 namespace consultancysolution.Models;
 

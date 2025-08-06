@@ -1,0 +1,64 @@
+@model List<consultancysolution.Models.CoursePaymentDto>
+<div class="CoursePaymentInfo">
+    <h5>Course Payments</h5>
+    <table class="table table-bordered" id="coursePaymentTable">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Cost</th>
+                <th>Paid</th>
+                <th>Due</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var coursePayment in Model)
+            {
+                <tr data-course-id="@coursePayment.CourseId">
+                    <td>@coursePayment.CourseName</td>
+                    <td>@coursePayment.Price</td>
+                    <td><input type="number" class="form-control paidAmount" value="@coursePayment.PaidAmount" /></td>
+                    <td class="dueAmount">@coursePayment.DueAmount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @{
+        if (ViewBag.CoursePaymentFormMode == "Edit")
+        {
+            <button id="editCoursePayments" class="btn btn-warning float-right">Edit</button>
+            <button id="updateCoursePayments" class="btn btn-success float-right" style="display:none;">Update</button>
+            <button id="cancelCoursePayments" class="btn btn-secondary float-right mr-2" style="display:none;">Cancel</button>
+        }
+        else
+        {
+            <button id="saveCoursePayments" class="btn btn-primary float-right">Save Course Payments</button>
+        }
+    }
+    <button type="button" class="closeBtn btn btn-secondary float-right mr-2"
+        onclick="window.location.href='/Students/Index';">Close</button>
+</div>
+<script>
+    function updateCoursePaymentDue() {
+        $("#coursePaymentTable tbody tr").each(function () {
+            const row = $(this);
+            const price = parseFloat(row.find("td:nth-child(2)").text()) || 0;
+            const paid = parseFloat(row.find(".paidAmount").val()) || 0;
+            const due = Math.max(0, price - paid);
+            row.find(".dueAmount").text(due.toFixed(2));
+        });
+    }
+    $("#coursePaymentTable").on("input", ".paidAmount", function () {
+        updateCoursePaymentDue();
+    });
+    //updateCoursePaymentDue(); // Initialize due amounts
+    $('#editCoursePayments').on("click", function () {
+        $(".paidAmount").prop("disabled", false);
+        $("#updateCoursePayments, #cancelCoursePayments").show();
+        $(this).hide();
+    });
+    $('#cancelCoursePayments').on("click", function () {
+        debugger;
+        loadTabContent(tab, mode, studentId);
+        //$('[data-tab="account"]').click();
+    });
+</script>

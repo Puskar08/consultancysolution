@@ -1,6 +1,5 @@
 using consultancysolution.Data;
 using consultancysolution.Models;
-using CourseManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
@@ -31,13 +30,29 @@ public class StudentsController : Controller
     // GET: Students/Create
     public IActionResult Create()
     {
-        // Get the list of courses to populate the dropdown
+        return RedirectToAction("Form", new { mode = "Create", studentId = 0 });
+    }
+    public IActionResult Form(string mode, int studentId = 0)
+    {
+        // Load courses for dropdown
         var courses = _context.Courses.ToList();
         ViewBag.Courses = courses;
-        ViewBag.FromButtom = "Create";
-        //return View("CreateStudent");
+
+        if (mode == "Edit" && studentId > 0)
+        {
+            var student = _context.Students.Find(studentId);
+            if (student == null)
+                return NotFound();
+
+            ViewBag.Student = student; // pass student data to view
+        }
+        // Pass mode and studentId to view using ViewData or ViewBag
+        ViewData["Mode"] = mode;
+        ViewData["StudentId"] = studentId;
+
         return View("CreateEditStudent");
     }
+
     // POST: Students/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -287,13 +302,13 @@ public class StudentsController : Controller
 
     //here starts the actual code 
     [HttpGet]
-    public IActionResult GetTabContent(string tab, string editType, int studentId)
+    public IActionResult GetTabContent(string tab, string pageMode, int studentId)
     {
         switch (tab)
         {
             case "basic-info":
-                ViewBag.EditMode = editType;
-                if (editType == "Edit" && studentId > 0)
+                ViewBag.BasicInfoMode = pageMode == "Create" && studentId == 0 ? "Add" : (pageMode == "Create" && studentId > 0 ? "Edit" : (pageMode == "Edit" ? "Edit" : "View"));
+                if (studentId > 0)
                 {
                     var student = _context.Students.FirstOrDefault(s => s.Id == studentId);
                     if (student != null)
@@ -305,8 +320,6 @@ public class StudentsController : Controller
                 return PartialView("_BasicInfo", new Students());
             case "course-selection":
                 ViewBag.Courses = _context.Courses.ToList();
-                ViewBag.EditMode = editType;
-                //ViewBag.studentId = studentId;
                 if (studentId > 0)
                 {
                     var studentCourses = (from sc in _context.StudentCourses
@@ -320,11 +333,11 @@ public class StudentsController : Controller
                                               Discount = c.Price - sc.ModifiedCoursePrice,
                                               ModifiedCoursePrice = sc.ModifiedCoursePrice
                                           }).ToList();
+                    ViewBag.CourseSelectionMode = studentCourses.Any() ? "Edit" : "Add";
                     return PartialView("_CourseSelection", studentCourses);
                 }
                 return PartialView("_CourseSelection", new List<SelectedCourseDto>());
             case "account":
-                ViewBag.EditMode = editType;
                 if (studentId > 0)
                 {
                     var admission = _context.Students
@@ -337,6 +350,7 @@ public class StudentsController : Controller
                             Paid = s.PaidAdmissionAmount,
                             Due = s.AdmissionCost - s.Discount - s.PaidAdmissionAmount
                         }).FirstOrDefault();
+                    ViewBag.AdmissionFormMode = admission?.Paid > 0 || admission?.Discount > 0 ? "Edit" : "Add";
 
                     var coursePayments = _context.StudentCourses
                         .Where(sc => sc.StudentId == studentId)
@@ -348,6 +362,7 @@ public class StudentsController : Controller
                             PaidAmount = sc.PaidAmount,
                             DueAmount = sc.DueAmount
                         }).ToList();
+                    ViewBag.CoursePaymentFormMode = coursePayments.Any(cp => cp.PaidAmount > 0) ? "Edit" : "Add";
 
                     var accountDto = new AccountDto
                     {
@@ -378,11 +393,19 @@ public class StudentsController : Controller
     {
         if (ModelState.IsValid)
         {
+            student.AdmissionCost = 1000; // Default admission cost, can be changed as needed
+            student.Discount = 0; // Default discount, can be changed as needed
+            student.PaidAdmissionAmount = 0; // Default paid amount, can be changed as needed   
             // Add the student to the database
             _context.Students.Add(student);
             _context.SaveChanges();
-            ViewBag.EditMode = "Edit";
-            return PartialView("_BasicInfo", _context.Students.FirstOrDefault(s => s.Id == student.Id));
+            ViewBag.BasicInfoMode = "Edit";
+            return Json(new
+            {
+                success = true,
+                studentId = student.Id
+            });
+            //return PartialView("_BasicInfo", _context.Students.FirstOrDefault(s => s.Id == student.Id));
         }
         return BadRequest("Failed to save student");
     }
@@ -435,29 +458,41 @@ public class StudentsController : Controller
                                      ModifiedCoursePrice = sc.ModifiedCoursePrice
                                  }).ToList();
 
-        ViewBag.EditMode = "Edit";
+        ViewBag.CourseSelectionMode = "Edit";
         ViewBag.Courses = _context.Courses.ToList();
         return PartialView("_CourseSelection", studentCourseList);
         //return Ok("Courses saved successfully.");
     }
+    
     [HttpPost]
-    public IActionResult SaveAdmissionFee(int studentId, [FromBody] AccountDto admission)
+    public IActionResult SaveAdmissionFee(int studentId, [FromBody] AdmissionFeeDto admissionFeeDto)
     {
-        if (admission == null || studentId == 0)
+        if (admissionFeeDto == null || studentId == 0)
             return BadRequest("Invalid data");
 
         var student = _context.Students.Find(studentId);
         if (student == null)
             return NotFound("Student not found");
 
-        student.AdmissionCost = admission.Admission.AdmissionFee;
-        student.Discount = admission.Admission.Discount;
+        student.AdmissionCost = admissionFeeDto.AdmissionFee != 0 ? admissionFeeDto.AdmissionFee : student.AdmissionCost; // Default admission cost if not provided
+        student.Discount = admissionFeeDto.Discount;
         // student.ModifiedAdmissionCost = admission.ModifiedAdmissionFee;
-        student.PaidAdmissionAmount = admission.Admission.Paid;
+        student.PaidAdmissionAmount = admissionFeeDto.Paid;
         // student.DueAdmissionAmount = admission.Due;
 
         _context.SaveChanges();
-        return PartialView("_Account", admission);
+        var admissionInfo = _context.Students
+                        .Where(s => s.Id == studentId)
+                        .Select(s => new AdmissionFeeDto
+                        {
+                            AdmissionFee = s.AdmissionCost,
+                            Discount = s.Discount,
+                            ModifiedAdmissionFee = s.AdmissionCost - s.Discount,
+                            Paid = s.PaidAdmissionAmount,
+                            Due = s.AdmissionCost - s.Discount - s.PaidAdmissionAmount
+                        }).FirstOrDefault();
+        ViewBag.AdmissionFormMode = admissionInfo?.Paid > 0 ? "Edit" : "Add";
+        return PartialView("_AdmissionInfo", admissionInfo);
     }
 
     [HttpPost]
@@ -483,17 +518,6 @@ public class StudentsController : Controller
         }
         _context.SaveChanges();
 
-        var admission = _context.Students
-            .Where(s => s.Id == studentId)
-            .Select(s => new AdmissionFeeDto
-            {
-                AdmissionFee = s.AdmissionCost,
-                Discount = s.Discount,
-                ModifiedAdmissionFee = s.AdmissionCost - s.Discount,
-                Paid = s.PaidAdmissionAmount,
-                Due = s.AdmissionCost - s.Discount - s.PaidAdmissionAmount
-            }).FirstOrDefault();
-
         var coursePayments = _context.StudentCourses
             .Where(sc => sc.StudentId == studentId)
             .Select(sc => new CoursePaymentDto
@@ -504,13 +528,8 @@ public class StudentsController : Controller
                 PaidAmount = sc.PaidAmount,
                 DueAmount = sc.DueAmount
             }).ToList();
-        var accountDto = new AccountDto
-        {
-            StudentId = studentId,
-            Admission = admission ?? new AdmissionFeeDto(),
-            CoursePayments = coursePayments
-        };
-        return PartialView("_Account", accountDto);
+        ViewBag.CoursePaymentFormMode = coursePayments.Any(cp => cp.PaidAmount > 0) ? "Edit" : "Add";
+        return PartialView("_CoursePaymentInfo", coursePayments);
     }
 
 }
