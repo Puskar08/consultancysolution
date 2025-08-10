@@ -22,8 +22,7 @@
                     @* <td><input class="form-control" type="number" id="modifiedAdmissionFee"
                             value="@Model.ModifiedAdmissionFee" disabled />
                     </td> *@
-                    <td><span id="modifiedAdmissionFee"
-                            >@Model.ModifiedAdmissionFee" </span>
+                    <td><span id="modifiedAdmissionFee">@Model.ModifiedAdmissionFee </span>
                     </td>
                     <td><input type="number" class="form-control" id="paidAdmissionAmount" value="@Model.Paid" /></td>
                     @* <td><input class="form-control" type="number" id="dueAdmissionAmount" value="@Model.Due" disabled /></td> *@
@@ -45,10 +44,11 @@
         </tbody>
     </table>
     @{
-        if(ViewBag.AdmissionFormMode == "Edit")
+        if (ViewBag.AdmissionFormMode == "Edit")
         {
             <button id="editAdmissionFee" class="btn btn-warning float-right">Edit</button>
-            <button id="updateAdmissionFee" class="btn btn-primary float-right" style="display:none;">Update Admission Fee</button>
+            <button id="updateAdmissionFee" class="btn btn-primary float-right" style="display:none;">Update Admission
+                Fee</button>
             <button id="cancelAdmissionFee" class="btn btn-secondary float-right mr-2" style="display:none;">Cancel</button>
         }
         else
@@ -57,7 +57,8 @@
         }
     }
     @* <button id="saveAdmissionFee" class="btn btn-success float-right mb-4">Save Admission Fee</button> *@
-    <button type="button" class="closeBtn btn btn-secondary float-right mr-2" onclick="window.location.href='/Students/Index';">Close</button>
+    <button type="button" class="closeBtn btn btn-secondary float-right mr-2"
+        onclick="window.location.href='/Students/Index';">Close</button>
 </div>
 <script>
 
@@ -73,14 +74,14 @@
         $('#dueAdmissionAmount').text(due.toFixed(2));
     }); *@
 
-    function getValue(selector) {
-        const el = $(selector);
-        if (el.is('input')) {
-            return parseFloat(el.val()) || 0;
-        } else {
-            return parseFloat(el.text()) || 0;
+        function getValue(selector) {
+            const el = $(selector);
+            if (el.is('input')) {
+                return parseFloat(el.val()) || 0;
+            } else {
+                return parseFloat(el.text()) || 0;
+            }
         }
-    }
     function updateCalculatedFields() {
         debugger;
         const admissionFee = getValue("#admissionFee");

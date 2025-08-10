@@ -46,34 +46,40 @@
         </tbody>
     </table>
 
-    @{
-        if (ViewBag.courseSelectionMode == "Edit")
-        {
-            <button id="editCourses" class="btn btn-warning float-right">Edit</button>
-            <button id="updateCourseSelection" class="btn btn-success float-right" style="display:none;">Update</button>
-            <button id="cancelCourseSelection" class="btn btn-secondary float-right mr-2" style="display:none;">Cancel</button>
+    <div class="col-sm-12 d-flex justify-content-end gap-2">
+        @{
+            if (ViewBag.courseSelectionMode == "Edit")
+            {
+                <button id="editCourses" class="btn btn-warning">Edit</button>
+                <button id="updateCourseSelection" class="btn btn-success" style="display:none;">Update</button>
+                <button id="cancelCourseSelection" class="btn btn-secondary" style="display:none;">Cancel</button>
+            }
+            else
+            {
+                <button id="saveCourses" class="btn btn-primary">Save</button>
+            }
+            <button type="button" class="closeBtn btn btn-secondary"
+                onclick="window.location.href='/Students/Index';">Close</button>
         }
-        else
-        {
-            <button id="saveCourses" class="btn btn-primary float-right">Save</button>
-        }
-        <button type="button" class="closeBtn btn btn-secondary float-right mr-2" onclick="window.location.href='/Students/Index';">Close</button>
-    }
+    </div>
 </div>
 
 <script>
-    let addedCourses = new Set();
-    //on doropdown change
-    $('#courseDropdown').on('change', function () {
-        debugger;
-        const selectedOption = $(this).find('option:selected');
-        const courseId = selectedOption.val();
-        const courseName = selectedOption.data('name');
-        const coursePrice = parseFloat(selectedOption.data('price'));
+    $(document).ready(function () {
 
-        if (!courseId || addedCourses.has(courseId)) return;
 
-        const newRow = `
+        let addedCourses = new Set();
+        //on doropdown change
+        $('#courseDropdown').on('change', function () {
+            debugger;
+            const selectedOption = $(this).find('option:selected');
+            const courseId = selectedOption.val();
+            const courseName = selectedOption.data('name');
+            const coursePrice = parseFloat(selectedOption.data('price'));
+
+            if (!courseId || addedCourses.has(courseId)) return;
+
+            const newRow = `
                     <tr data-id="${courseId}">
                         <td>${courseName}<input type="hidden" name="Courses[${courseId}].Id" value="${courseId}" /></td>
                         <td>${coursePrice}<input type="hidden" name="Courses[${courseId}].Price" value="${coursePrice}" /></td>
@@ -88,30 +94,30 @@
                         </td>
                     </tr>
                 `;
-        $('#selectedCourses').append(newRow);
-        addedCourses.add(courseId);
-        $(this).val('');
-    });
+            $('#selectedCourses').append(newRow);
+            addedCourses.add(courseId);
+            $(this).val('');
+        });
 
-    // Update Modified Fee on discount input
-    $('#selectedCourses').on('input', '.discount', function () {
-        const row = $(this).closest('tr');
-        const price = parseFloat(row.find('input[name$=".Price"]').val());
-        const discount = parseFloat($(this).val()) || 0;
-        const modified = Math.max(0, price - discount);
-        row.find('.modifiedFee').text(modified.toFixed(2));
-    });
+        // Update Modified Fee on discount input
+        $('#selectedCourses').on('input', '.discount', function () {
+            const row = $(this).closest('tr');
+            const price = parseFloat(row.find('input[name$=".Price"]').val());
+            const discount = parseFloat($(this).val()) || 0;
+            const modified = Math.max(0, price - discount);
+            row.find('.modifiedFee').text(modified.toFixed(2));
+        });
 
-    // Delete course row
-    $('#selectedCourses').on('click', '.delete-row', function () {
-        const row = $(this).closest('tr');
-        const courseId = row.data('id');
-        row.remove();
-        addedCourses.delete(String(courseId));
+        // Delete course row
+        $('#selectedCourses').on('click', '.delete-row', function () {
+            const row = $(this).closest('tr');
+            const courseId = row.data('id');
+            row.remove();
+            addedCourses.delete(String(courseId));
+        });
     });
-
     // Save courses
-    function saveCourses(){
+    function saveCourses() {
         const studentId = $('#StudentID').val();
         const data = [];
 
@@ -130,15 +136,29 @@
             contentType: 'application/json',
             data: JSON.stringify(data), // <- Just the array body
             success: function (response) {
-                debugger;
-                alert('Courses saved successfully.');
-                $('#tab-content').html(response)
-
-                $('[data-tab="account"]').removeClass('disabled');
-                $('[data-tab="account"]').click();
+                if (response.success) {
+                    $('#tab-content').html(response.html);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message || 'Courses saved successfully.'
+                    });
+                    $('[data-tab="account"]').removeClass('disabled');
+                    $('[data-tab="account"]').click();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to save courses.'
+                    });
+                }
             },
             error: function () {
-                alert('Error saving courses.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while saving courses.'
+                });
             }
         });
     }

@@ -1,31 +1,25 @@
 using consultancysolution.Data;
 using consultancysolution.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace consultancysolution.Controllers;
 
 public class StudentsController : Controller
 {
     private readonly ApplicationDbContext _context;
-    public StudentsController(ApplicationDbContext context)
+    private readonly ICompositeViewEngine _viewEngine;
+    public StudentsController(ApplicationDbContext context, ICompositeViewEngine viewEngine)
     {
         _context = context;
+        _viewEngine = viewEngine;
     }
     public IActionResult Index()
     {
         var students = _context.Students.ToList();
         return View(students);
-    }
-    // GET: Students/Details/5
-    public IActionResult Details(int id)
-    {
-        var student = _context.Students.FirstOrDefault(s => s.Id == id);
-        if (student == null)
-        {
-            return NotFound();
-        }
-        return View(student);
     }
     // GET: Students/Create
     public IActionResult Create()
@@ -53,184 +47,6 @@ public class StudentsController : Controller
         return View("CreateEditStudent");
     }
 
-    // POST: Students/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Create(Students student, List<StudentCourse> studentCourses)
-    {
-        if (ModelState.IsValid)
-        {
-            // Add the student to the database
-            _context.Students.Add(student);
-            _context.SaveChanges();
-
-            // Add the selected courses to the student's course list
-            foreach (var courses in studentCourses)
-            {
-                courses.StudentId = student.Id;
-                courses.CourseId = courses.CourseId;
-                courses.EnrollmentDate = DateTime.Now;
-                courses.ModifiedCoursePrice = courses.ModifiedCoursePrice;
-                courses.PaidAmount = 0;
-                courses.DueAmount = 0;
-                _context.StudentCourses.Add(courses);
-            }
-            _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
-        }
-        // If model state is invalid, repopulate the courses
-        ViewBag.Courses = _context.Courses.ToList();
-        return View(student);
-    }
-    [HttpPost]
-    [Route("Students/CreateStudent")]
-    public IActionResult CreateStudent([FromBody] Students student)
-    {
-        if (!ModelState.IsValid)
-        {
-            var errors = ModelState.Values
-                .SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage)
-                .ToList();
-
-            return BadRequest(new { errors });
-        }
-
-        _context.Students.Add(student);
-        _context.SaveChanges();
-
-        var courses = _context.Courses.Select(c => new
-        {
-            id = c.Id,
-            name = c.Name,
-            fee = c.Price
-        }).ToList();
-
-        return Ok(new
-        {
-            id = student.Id,
-            courses
-        });
-    }
-    // [HttpPost]
-    // [Route("Students/SaveCourses")]
-    // public IActionResult SaveCoursesprev([FromBody] List<StudentCourseDto> courses)
-    // {
-    //     if (courses == null || courses.Count == 0)
-    //         return BadRequest("No courses provided.");
-
-    //     var savedCourses = new List<object>();
-
-    //     foreach (var course in courses)
-    //     {
-    //         var studentCourse = new StudentCourse
-    //         {
-    //             StudentId = course.StudentId,
-    //             CourseId = course.CourseId,
-    //             ModifiedCoursePrice = course.ModifiedFee,
-    //             PaidAmount = 0,
-    //             DueAmount = course.ModifiedFee,
-    //             EnrollmentDate = DateTime.Now
-    //         };
-
-    //         _context.StudentCourses.Add(studentCourse);
-
-    //         var courseInfo = _context.Courses.FirstOrDefault(c => c.Id == course.CourseId);
-    //         if (courseInfo != null)
-    //         {
-    //             savedCourses.Add(new
-    //             {
-    //                 name = courseInfo.Name,
-    //                 modifiedFee = course.ModifiedFee
-    //             });
-    //         }
-    //     }
-
-    //     _context.SaveChanges();
-
-    //     return Ok(new { message = "Courses saved successfully.", courses = savedCourses });
-    // }
-    // [HttpPost]
-    // public IActionResult SaveAdmissionFee([FromBody] AdmissionFeeDto data)
-    // {
-    //     var student = _context.Students.FirstOrDefault(s => s.Id == data.StudentId);
-    //     if (student == null)
-    //         return NotFound("Student not found");
-
-    //     student.AdmissionCost = data.AdmissionFee;
-    //     student.PaidAdmissionAmount = data.Paid;
-    //     _context.SaveChanges();
-
-    //     return Ok();
-    // }
-    // [HttpPost]
-    // public IActionResult SaveCoursePayments([FromBody] List<CoursePaymentDto> payments)
-    // {
-    //     foreach (var payment in payments)
-    //     {
-    //         var studentCourse = _context.StudentCourses
-    //             .FirstOrDefault(sc => sc.StudentId == payment.StudentId && sc.CourseId == payment.CourseId);
-
-    //         if (studentCourse != null)
-    //         {
-    //             studentCourse.PaidAmount = payment.PaidAmount;
-    //             studentCourse.DueAmount = payment.DueAmount;
-    //         }
-    //     }
-
-    //     _context.SaveChanges();
-    //     return Ok();
-    // }
-
-    // GET: Students/Edit/5
-    public IActionResult Edit(int id)
-    {
-        var student = _context.Students.FirstOrDefault(s => s.Id == id);
-        if (student == null)
-        {
-            return NotFound();
-        }
-        // Get the list of courses to populate the dropdown
-        var courses = _context.Courses.ToList();
-        ViewBag.Courses = courses;
-        return View(student);
-    }
-    // POST: Students/Edit/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Students student, int[] selectedCourses)
-    {
-        if (id != student.Id)
-        {
-            return BadRequest();
-        }
-        if (ModelState.IsValid)
-        {
-            // Update the student details
-            _context.Update(student);
-            _context.SaveChanges();
-
-            // Update the selected courses for the student
-            var existingCourses = _context.StudentCourses.Where(sc => sc.StudentId == student.Id).ToList();
-            _context.StudentCourses.RemoveRange(existingCourses);
-            foreach (var courseId in selectedCourses)
-            {
-                var studentCourse = new StudentCourse
-                {
-                    StudentId = student.Id,
-                    CourseId = courseId,
-                    PaidAmount = 0,
-                    DueAmount = 0
-                };
-                _context.StudentCourses.Add(studentCourse);
-            }
-            _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
-        }
-        // If model state is invalid, repopulate the courses
-        ViewBag.Courses = _context.Courses.ToList();
-        return View(student);
-    }
     // GET: Students/Delete/5
     public IActionResult Delete(int id)
     {
@@ -254,56 +70,37 @@ public class StudentsController : Controller
         }
         return RedirectToAction(nameof(Index));
     }
-    // GET: Students/EnrollCourse/5
-    public IActionResult EnrollCourse(int id)
+    private string RenderPartialViewToString(string viewName, object model)
     {
-        var student = _context.Students.FirstOrDefault(s => s.Id == id);
-        if (student == null)
+        ViewData.Model = model;
+        using (var sw = new StringWriter())
         {
-            return NotFound();
-        }
-        // Get the list of courses to populate the dropdown
-        var courses = _context.Courses.ToList();
-        ViewBag.Courses = courses;
-        return View(student);
-    }
-    // POST: Students/EnrollCourse/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult EnrollCourse(int id, int[] selectedCourses)
-    {
-        var student = _context.Students.FirstOrDefault(s => s.Id == id);
-        if (student == null)
-        {
-            return NotFound();
-        }
-        if (ModelState.IsValid)
-        {
-            // Add the selected courses to the student's course list
-            foreach (var courseId in selectedCourses)
+            var viewResult = _viewEngine.FindView(ControllerContext, viewName, false);
+            if (viewResult.Success)
             {
-                var studentCourse = new StudentCourse
-                {
-                    StudentId = student.Id,
-                    CourseId = courseId,
-                    PaidAmount = 0,
-                    DueAmount = 0
-                };
-                _context.StudentCourses.Add(studentCourse);
+                var viewContext = new ViewContext(
+                    ControllerContext,
+                    viewResult.View,
+                    ViewData,
+                    TempData,
+                    sw,
+                    new HtmlHelperOptions()
+                );
+                viewResult.View.RenderAsync(viewContext).GetAwaiter().GetResult();
+                return sw.GetStringBuilder().ToString();
             }
-            _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            else
+            {
+                throw new ArgumentException($"View {viewName} not found");
+            }
         }
-        // If model state is invalid, repopulate the courses
-        ViewBag.Courses = _context.Courses.ToList();
-        return View(student);
     }
 
-
-    //here starts the actual code 
     [HttpGet]
     public IActionResult GetTabContent(string tab, string pageMode, int studentId)
     {
+        var htmlContent = string.Empty;
+        var message = string.Empty;
         switch (tab)
         {
             case "basic-info":
@@ -313,11 +110,12 @@ public class StudentsController : Controller
                     var student = _context.Students.FirstOrDefault(s => s.Id == studentId);
                     if (student != null)
                     {
-                        return PartialView("_BasicInfo", student);
+                        htmlContent = RenderPartialViewToString("_BasicInfo", student);
+                        break;
                     }
-                    return NotFound("Student not found");
                 }
-                return PartialView("_BasicInfo", new Students());
+                htmlContent = RenderPartialViewToString("_BasicInfo", new Students());
+                break;
             case "course-selection":
                 ViewBag.Courses = _context.Courses.ToList();
                 if (studentId > 0)
@@ -334,9 +132,11 @@ public class StudentsController : Controller
                                               ModifiedCoursePrice = sc.ModifiedCoursePrice
                                           }).ToList();
                     ViewBag.CourseSelectionMode = studentCourses.Any() ? "Edit" : "Add";
-                    return PartialView("_CourseSelection", studentCourses);
+                    htmlContent = RenderPartialViewToString("_CourseSelection", studentCourses);
+                    break;
                 }
-                return PartialView("_CourseSelection", new List<SelectedCourseDto>());
+                htmlContent = RenderPartialViewToString("_CourseSelection", new List<SelectedCourseDto>());
+                break;
             case "account":
                 if (studentId > 0)
                 {
@@ -370,28 +170,40 @@ public class StudentsController : Controller
                         Admission = admission ?? new AdmissionFeeDto(),
                         CoursePayments = coursePayments
                     };
-                    return PartialView("_Account", accountDto);
+                    htmlContent = RenderPartialViewToString("_Account", accountDto);
+                    break;
                 }
-                return PartialView("_Account", new AccountDto());
+                htmlContent = RenderPartialViewToString("_Account", new AccountDto());
+                break;
             default:
-                return BadRequest("Invalid Tab");
+                message = "Invalid tab selected.";
+                return Json(new
+                {
+                    success = false,
+                    message = message,
+                    html = htmlContent
+                });
         }
-    }
-    [HttpGet]
-    public IActionResult GetBaiscInfo(int id)
-    {
-        var student = _context.Students.FirstOrDefault(s => s.Id == id);
-        if (student != null)
+        return Json(new
         {
-            ViewBag.EditMode = "Edit";
-            return PartialView("_BasicInfo", student);
-        }
-        return BadRequest("Invalid Tab");
+            success = true,
+            message = "Tab content loaded successfully.",
+            html = htmlContent
+        });
     }
     [HttpPost]
     public IActionResult CreateStudentOnly(Students student)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
+        {
+            return Json(new
+            {
+                success = false,
+                message = "Invalid student data",
+                html = string.Empty
+            });
+        }
+        try
         {
             student.AdmissionCost = 1000; // Default admission cost, can be changed as needed
             student.Discount = 0; // Default discount, can be changed as needed
@@ -400,14 +212,25 @@ public class StudentsController : Controller
             _context.Students.Add(student);
             _context.SaveChanges();
             ViewBag.BasicInfoMode = "Edit";
+            var htmlContent = RenderPartialViewToString("_BasicInfo", student);
             return Json(new
             {
                 success = true,
-                studentId = student.Id
+                message = "Student created successfully.",
+                studentId = student.Id,
+                html = htmlContent
             });
-            //return PartialView("_BasicInfo", _context.Students.FirstOrDefault(s => s.Id == student.Id));
         }
-        return BadRequest("Failed to save student");
+        catch (Exception ex)
+        {
+            return Json(new
+            {
+                success = false,
+                message = "Error saving student: " + ex.Message,
+                html = string.Empty
+            });
+        }
+
     }
     [HttpPost]
     public IActionResult ModifyStudent(Students student)
@@ -416,10 +239,32 @@ public class StudentsController : Controller
         {
             _context.Update(student);
             _context.SaveChanges();
-            ViewBag.EditMode = "Edit";
-            return PartialView("_BasicInfo", _context.Students.FirstOrDefault(s => s.Id == student.Id));
+            ViewBag.BasicInfoMode = "Edit";
+            var studentData = _context.Students.FirstOrDefault(s => s.Id == student.Id);
+            if (studentData == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Student not found.",
+                    html = string.Empty
+                });
+            }
+            var htmlContent = RenderPartialViewToString("_BasicInfo", studentData);
+            return Json(new
+            {
+                success = true,
+                message = "Student updated successfully.",
+                studentId = student.Id,
+                html = htmlContent
+            });
         }
-        return BadRequest("Failed to save student");
+        return Json(new
+        {
+            success = false,
+            message = "Invalid student data",
+            html = string.Empty
+        });
     }
 
     [HttpPost]
@@ -427,7 +272,11 @@ public class StudentsController : Controller
     public IActionResult SaveCourses(int studentid, [FromBody] List<SelectedCourseDto> selectedCourses)
     {
         if (selectedCourses == null || !selectedCourses.Any())
-            return BadRequest("No courses submitted.");
+            return Json(new
+            {
+                success = false,
+                message = "No courses selected."
+            });
         _context.StudentCourses.RemoveRange(_context.StudentCourses.Where(sc => sc.StudentId == studentid));
         foreach (var course in selectedCourses)
         {
@@ -460,25 +309,36 @@ public class StudentsController : Controller
 
         ViewBag.CourseSelectionMode = "Edit";
         ViewBag.Courses = _context.Courses.ToList();
-        return PartialView("_CourseSelection", studentCourseList);
-        //return Ok("Courses saved successfully.");
+        var htmlContent = RenderPartialViewToString("_CourseSelection", studentCourseList);
+        return Json(new
+        {
+            success = true,
+            message = "Courses saved successfully.",
+            html = htmlContent,
+        });
     }
-    
+
     [HttpPost]
     public IActionResult SaveAdmissionFee(int studentId, [FromBody] AdmissionFeeDto admissionFeeDto)
     {
         if (admissionFeeDto == null || studentId == 0)
-            return BadRequest("Invalid data");
+            return Json(new
+            {
+                success = false,
+                message = "Invalid data"
+            });
 
         var student = _context.Students.Find(studentId);
         if (student == null)
-            return NotFound("Student not found");
+            return Json(new
+            {
+                success = false,
+                message = "Student not found"
+            });
 
         student.AdmissionCost = admissionFeeDto.AdmissionFee != 0 ? admissionFeeDto.AdmissionFee : student.AdmissionCost; // Default admission cost if not provided
         student.Discount = admissionFeeDto.Discount;
-        // student.ModifiedAdmissionCost = admission.ModifiedAdmissionFee;
         student.PaidAdmissionAmount = admissionFeeDto.Paid;
-        // student.DueAdmissionAmount = admission.Due;
 
         _context.SaveChanges();
         var admissionInfo = _context.Students
@@ -492,21 +352,35 @@ public class StudentsController : Controller
                             Due = s.AdmissionCost - s.Discount - s.PaidAdmissionAmount
                         }).FirstOrDefault();
         ViewBag.AdmissionFormMode = admissionInfo?.Paid > 0 ? "Edit" : "Add";
-        return PartialView("_AdmissionInfo", admissionInfo);
+        var htmlContent = RenderPartialViewToString("_AdmissionInfo", admissionInfo ?? new AdmissionFeeDto());
+        return Json(new
+        {
+            success = true,
+            message = "Admission fee saved successfully.",
+            html = htmlContent
+        });
     }
 
     [HttpPost]
     public IActionResult SaveCoursePayments(int studentId, [FromBody] List<CoursePaymentDto> coursePayment)
     {
         if (coursePayment == null || studentId == 0)
-            return BadRequest("Invalid data");
+            return Json(new
+            {
+                success = false,
+                message = "Invalid data"
+            });
 
         var courseIds = coursePayment.Select(cp => cp.CourseId).ToList();
         var existingCourses = _context.StudentCourses
                                 .Where(sc => sc.StudentId == studentId && courseIds.Contains(sc.CourseId))
                                 .ToList();
         if (existingCourses.Count == 0)
-            return NotFound("No courses found for the student");
+            return Json(new
+            {
+                success = false,
+                message = "No courses found for the student."
+            });
         foreach (var course in existingCourses)
         {
             var payment = coursePayment.FirstOrDefault(cp => cp.CourseId == course.CourseId);
@@ -529,7 +403,13 @@ public class StudentsController : Controller
                 DueAmount = sc.DueAmount
             }).ToList();
         ViewBag.CoursePaymentFormMode = coursePayments.Any(cp => cp.PaidAmount > 0) ? "Edit" : "Add";
-        return PartialView("_CoursePaymentInfo", coursePayments);
+        var htmlContent = RenderPartialViewToString("_CoursePayment", coursePayments);
+        return Json(new
+        {
+            success = true,
+            message = "Course payments saved successfully.",
+            html = htmlContent
+        });
     }
 
 }

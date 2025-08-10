@@ -10,9 +10,9 @@
 </div>
 <script>
     const studentId = $('#StudentID').val();
-    
+
     //save admission fee
-    function saveAdmissionFee(url){
+    function saveAdmissionFee(url) {
         const admissionFee = parseFloat($("#admissionFee").text()) || 0;
         const discount = parseFloat($("#admissionFeeDiscount").val()) || 0;
         const modifiedFee = parseFloat($("#modifiedAdmissionFee").text()) || 0;
@@ -20,11 +20,11 @@
         const due = parseFloat($("#dueAdmissionAmount").text()) || 0;
 
         const payload = {
-                AdmissionFee: admissionFee,
-                Discount: discount,
-                ModifiedAdmissionFee: modifiedFee,
-                Paid: paid,
-                Due: due
+            AdmissionFee: admissionFee,
+            Discount: discount,
+            ModifiedAdmissionFee: modifiedFee,
+            Paid: paid,
+            Due: due
         };
 
         $.ajax({
@@ -33,20 +33,41 @@
             data: JSON.stringify(payload),
             contentType: 'application/json',
             success: function (response) {
-                alert("Admission Fee Saved");
-                $('#admission-container').html(response);
+                if (response.success) {
+                    $('#admission-container').html(response.html);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message || 'Admission fee saved successfully.',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to save admission fee.'
+                    });
+                }
             },
             error: function () {
-                alert("Error saving admission fee");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while saving admission fee.'
+                });
             }
         });
     }
     $("#saveAdmissionFee, #updateAdmissionFee").click(function () {
         saveAdmissionFee(`/Students/SaveAdmissionFee?studentId=${studentId}`);
     });
-    
+
     //save course payments
-    function submitCoursePayments(url){
+    function submitCoursePayments(url) {
         const coursePayments = [];
         $("#coursePaymentTable tbody tr").each(function () {
             const row = $(this);
@@ -71,11 +92,26 @@
             contentType: 'application/json',
             data: JSON.stringify(coursePayments),
             success: function (response) {
-                $('#coursePayment-container').html(response);
-                alert("Course Payments Saved");
+                if (response.success) {
+                    $('#coursePayment-container').html(response.html);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message || 'Course payments saved successfully.',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                }
             },
             error: function () {
-                alert("Error saving course payments");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while saving course payments.'
+                });
             }
         });
     }

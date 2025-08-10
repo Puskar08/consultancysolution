@@ -31,6 +31,7 @@
 @{
     string mode = ViewData["Mode"]?.ToString() ?? "View";
     int studentId = (int)(ViewData["StudentId"] ?? 0);
+    var tabDisabledAttribute = studentId > 0 ? "" : "disabled";
 }
 <input type="hidden" id="StudentID" value="@studentId" />
 <input type="hidden" id="mode" value="@mode" />
@@ -38,8 +39,8 @@
     <!--Nav Tabs-->
     <div class="step-nav" id="studentTabs"">
         <button class=" step-button active" data-tab="basic-info">Basic Info</button>
-        <button class="step-button disabled" data-tab="course-selection">Course Selection</button>
-        <button class="step-button disabled" data-tab="account">Account</button>
+        <button class="step-button" data-tab="course-selection" @tabDisabledAttribute>Course Selection</button>
+        <button class="step-button" data-tab="account" @tabDisabledAttribute>Account</button>
     </div>
     <!--Tab Content-->
     <div id="tab-content" class="mt-4">
@@ -55,6 +56,7 @@
             // Redirect to the Index page
             window.location.href = '/Students/Index'; // Replace with the correct URL for your Index page
         });
+
         //load the first tab content
         loadTabContent('basic-info', mode);
         //handle tab button click
@@ -66,22 +68,33 @@
             $(this).addClass('active');
             //load the corresponding tab content
             const tab = $(this).data('tab');
-            var studentId = $('#StudentID').val();
-            loadTabContent(tab, mode, studentId);
+            loadTabContent(tab, mode);
         })
 
         //function to load tab content dynamically
-        function loadTabContent(tab, pageMode, studentId) {
+        function loadTabContent(tab, pageMode) {
             debugger;
             $.ajax({
-                url: `/Students/GetTabContent?tab=${tab}&pageMode=${pageMode}&studentId=${studentId}`,
+                url: `/Students/GetTabContent?tab=${tab}&pageMode=${pageMode}&studentId=${$('#StudentID').val()}`,
                 type: 'GET',
                 success: function (response) {
-                    debugger;
-                    $('#tab-content').html(response)
+                    if (response.success) {
+                        debugger;
+                        $('#tab-content').html(response.html);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to load tab content.'
+                        });
+                    }
                 },
                 error: function () {
-                    alert('failed to load tab content');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load tab content.'
+                    });
                 }
             });
         }

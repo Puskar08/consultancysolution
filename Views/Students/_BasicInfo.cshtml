@@ -1,50 +1,78 @@
 @model Students
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+@{
+    var disableAttr = (ViewBag.BasicInfoMode == "Add") ? "" : "disabled";
+}
+<style>
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .col-form-label {
+        text-align: left;
+        cursor: pointer;
+    }
+</style>
 <div id="basic-info" class="tab-pane active">
-    <form id="studentForm" ifeditmode eidt then disable>
+    <form id="studentForm" class="form-horizontal" method="post">
         <input type="hidden" id="StudentId" name="StudentId" value="@Model.Id">
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label>Name</label>
-                <input type="text" class="form-control" name="Name" value="@Model.Name" required>
+        <div class="form-group row">
+            <label for="Name" class="col-sm-2 col-form-label">Name</label>
+            <div class="col-sm-4">
+                <input type="text" id="Name" class="form-control" name="Name" value="@Model.Name" required
+                    @disableAttr />
             </div>
-            <div class="form-group col-md-6">
-                <label>Email</label>
-                <input type="email" class="form-control" name="Email" value="@Model.Email" required>
-            </div>
-            <div class="form-group col-md-6">
-                <label>Phone</label>
-                <input type="text" class="form-control" name="Phone" value="@Model.Phone" required>
-            </div>
-            <div class="form-group col-md-6">
-                <label>Address</label>
-                <input type="text" class="form-control" name="Address" value="@Model.Address">
-            </div>
-            <div class="form-group col-md-6">
-                <label>Date of Birth</label>
-                <input type="date" class="form-control" name="DateOfBirth"
-                    value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" required>
-            </div>
-            <div class="form-group col-md-6">
-                <label>Admission Date</label>
-                <input type="date" class="form-control" name="AdmissionDate"
-                    value="@Model.AdmissionDate.ToString("yyyy-MM-dd")" required>
+
+            <label for="Email" class="col-sm-2 col-form-label">Email</label>
+            <div class="col-sm-4">
+                <input type="email" id="Email" class="form-control" name="Email" value="@Model.Email" required
+                    @disableAttr />
             </div>
         </div>
-        @{
-            if (ViewBag.BasicInfoMode == "Add")
-            {
-                <button type="submit" class="btn btn-primary float-right" data-buttonType="add">Save</button>
+
+        <div class="form-group row">
+            <label for="Phone" class="col-sm-2 col-form-label">Phone</label>
+            <div class="col-sm-4">
+                <input type="text" id="Phone" class="form-control" name="Phone" value="@Model.Phone" required
+                    @disableAttr>
+            </div>
+
+            <label for="Address" class="col-sm-2 col-form-label">Address</label>
+            <div class="col-sm-4">
+                <input type="text" id="Address" class="form-control" name="Address" value="@Model.Address" @disableAttr>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="DateofBirth" class="col-sm-2 col-form-label">Date of Birth</label>
+            <div class="col-sm-4">
+                <input type="date" id="DateofBirth" class="form-control" name="DateOfBirth"
+                    value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" required @disableAttr>
+            </div>
+
+            <label for="AdmissionDate" class="col-sm-2 col-form-label">Admission Date</label>
+            <div class="col-sm-4">
+                <input type="date" class="form-control" id="AdmissionDate" name="AdmissionDate"
+                    value="@Model.AdmissionDate.ToString("yyyy-MM-dd")" required @disableAttr>
+            </div>
+        </div>
+
+        <div class="col-sm-12 d-flex justify-content-end gap-2">
+            @{
+                if (ViewBag.BasicInfoMode == "Add")
+                {
+                    <button type="submit" class="btn btn-primary" data-buttonType="add">Save</button>
+                }
+                else if (ViewBag.BasicInfoMode == "Edit")
+                {
+                    <button type="button" id="editBasicInfo" class="btn btn-warning">Edit</button>
+                    <button type="submit" id="updateBasicInfo" class="btn btn-success" data-buttonType="edit"
+                        style="display:none;">Update</button>
+                    <button type="button" id="cancelBasicInfo" class="btn btn-secondary" style="display:none;">Cancel</button>
+                }
+                <button type="button" class="closeBtn btn btn-secondary" onclick="window.location.href='/Students/Index';"
+                    style="">Close</button>
             }
-            else if (ViewBag.BasicInfoMode == "Edit")
-            {
-                <button type="button" class="btn btn-warning float-right" >Edit</button>
-                <button type="submit" id="updateBasicInfo" class="btn btn-success float-right" data-buttonType="edit"
-                    style="display:none;">Update</button>
-            }
-            <button type="button" class="closeBtn btn btn-secondary float-right mr-2"
-                onclick="window.location.href='/Students/Index';" style="">Close</button>
-        }
+        </div>
     </form>
 </div>
 <script>
@@ -52,21 +80,23 @@
         debugger;
         let clickedButtonType = null;
         let mode = $('#mode').val();
-       
+
         $('#editBasicInfo').on('click', function () {
+            debugger;
             $('#studentForm input').prop('disabled', false);
-            $('#updateBasicInfo #cancelBasicInfo').show();
+            $('#updateBasicInfo, #cancelBasicInfo').show();
+            $('.closeBtn').hide();
             $(this).hide();
         })
         $('#cancelBasicInfo').on('click', function () {
-            loadTabContent('basic-info', mode, studentId);
-            //$('[data-tab="basic-info"]').click();
+            debugger;
+            $('[data-tab="basic-info"]').click();
         });
         $('#studentForm button[type="submit"]').on('click', function (e) {
             debugger;
             clickedButtonType = this.dataset.buttontype;
         })
-        
+
         $('#studentForm').on('submit', function (e) {
             debugger;
             e.preventDefault();
@@ -77,23 +107,56 @@
                 type: 'POST',
                 data: formData,
                 success: function (response) {
-                    const studentId = response.studentId;
-                    // Update the browser URL
-                    history.replaceState(null, '', `/Students/Form?mode=${mode}&studentId=${studentId}`);
-                    // Update hidden field
-                    $('#StudentId').val(studentId);//form element
-                    $('#StudentID').val(studentId);//page element
-                    debugger;
-                    alert('basic info saved successfully, continure to course selection');
-                    //$('#tab-content').html(response)
+                    if (response.success) {
+                        debugger;
+                        // Update the browser URL
+                        history.replaceState(null, '', `/Students/Form?mode=${mode}&studentId=${response.studentId}`);
+                        // Update hidden field
+                        //$('#StudentId').val(response.studentId);//form element
+                        $('#StudentID').val(response.studentId);//page element
+                        $('#tab-content').html(response.html)
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Success!',
+                            text: response.message || 'Basic info saved successfully, continue to course selection.',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
 
-                    // Enable next tabs
-                    if(clickedButtonType == "add") {
-                        $('[data-tab="course-selection"]').removeClass('disabled');
-                        $('[data-tab="account"]').removeClass('disabled');
-                        // Automatically navigate to the next tab
-                        $('[data-tab="course-selection"]').click();
+                        // Enable next tabs
+                        if (clickedButtonType == "add" || clickedButtonType == "edit") {
+                            $('[data-tab="course-selection"]').removeClass('disabled');
+                            $('[data-tab="account"]').removeClass('disabled');
+                            // Automatically navigate to the next tab
+                            $('[data-tab="course-selection"]').click();
+                        }
+                    } else {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            icon: 'error',
+                            title: 'Error!',
+                            text: response.message || 'Failed to save basic info.',
+                        });
                     }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'An error occurred while saving basic info.',
+                    });
                 }
             });
         })
