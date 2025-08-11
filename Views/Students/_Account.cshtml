@@ -1,5 +1,4 @@
 @model consultancysolution.Models.AccountDto
-
 <div id="account" class="tab-pane" style="">
     <div class="admission-container">
         <partial name="_AdmissionInfo" model="Model.Admission" />
@@ -8,7 +7,7 @@
         <partial name="_CoursePaymentInfo" model="Model.CoursePayments" />
     </div>
 </div>
-<script>  
+<script>
     //save admission fee
     function saveAdmissionFee(url) {
         const admissionFee = parseFloat($("#admissionFee").val()) || 0;
@@ -64,15 +63,15 @@
     $(document)
         .off('click', "#saveAdmissionFee, #updateAdmissionFee")
         .on('click', "#saveAdmissionFee, #updateAdmissionFee", function () {
-      saveAdmissionFee(`/Students/SaveAdmissionFee?studentId=${$('#StudentID').val()}`);
-  });
-  $(document)
-    .off('click', '#editAdmissionFee')
-    .on('click', '#editAdmissionFee', function () {
-        $("#admissionFee, #admissionFeeDiscount, #paidAdmissionAmount").prop("disabled", false);
-        $("#updateAdmissionFee, #cancelAdmissionFee").show();
-        $(this).hide();
-    });
+            saveAdmissionFee(`/Students/SaveAdmissionFee?studentId=${$('#StudentID').val()}`);
+        });
+    $(document)
+        .off('click', '#editAdmissionFee')
+        .on('click', '#editAdmissionFee', function () {
+            $("#admissionFee, #admissionFeeDiscount, #paidAdmissionAmount").prop("disabled", false);
+            $("#updateAdmissionFee, #cancelAdmissionFee").show();
+            $(this).hide();
+        });
 
     $(document)
         .off('click', '#cancelAdmissionFee')
@@ -132,7 +131,7 @@
     }
     $(document)
         .off('click', '#saveCoursePayments, #updateCoursePayments')
-        .on('click', '#saveCoursePayments, #updateCoursePayments',function () {
+        .on('click', '#saveCoursePayments, #updateCoursePayments', function () {
             const saveUrl = `/Students/SaveCoursePayments?studentId=${$('#StudentID').val()}`;
             submitCoursePayments(saveUrl);
         });
@@ -143,10 +142,10 @@
             $(".paidAmount").prop("disabled", false);
             $("#updateCoursePayments, #cancelCoursePayments").show();
             $(this).hide();
-    });
+        });
     $(document)
-    .off('click', '#cancelCoursePayments')
-    .on("click", '#cancelCoursePayments', function () {
-        $('[data-tab="account"]').click();
-    });
+        .off('click', '#cancelCoursePayments')
+        .on("click", '#cancelCoursePayments', function () {
+            $('[data-tab="account"]').click();
+        });
 </script>

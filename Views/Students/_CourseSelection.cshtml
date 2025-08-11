@@ -3,7 +3,6 @@
     var courses = ViewBag.Courses as List<consultancysolution.Models.Course>;
     var disableAttr = (ViewBag.CourseSelectionMode == "Add") ? "" : "disabled";
 }
-
 <div id="course-selection" class="tab-pane">
     <div class="form-group">
         <label>Select Courses:</label>
@@ -22,7 +21,7 @@
     </div>
 
     </br>
-    <table class="table table-bordered">
+    <table>
         <thead>
             <tr>
                 <th>Course</th>
@@ -41,7 +40,9 @@
                     <td><input type="number" name="Courses[@item.Id].Discount" class="form-control discount"
                             value="@item.Discount" @disableAttr /></td>
                     <td class="modifiedFee">@item.ModifiedCoursePrice </td>
-                    <td><button type="button" class="btn btn-danger btn-sm delete-row"><i class="fa-solid fa-xmark"></i></button>
+                    <td><button type="button" class="action-btn delete-row">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </td>
                 </tr>
             }
