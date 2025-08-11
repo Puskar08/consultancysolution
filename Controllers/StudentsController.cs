@@ -47,29 +47,47 @@ public class StudentsController : Controller
         return View("CreateEditStudent");
     }
 
-    // GET: Students/Delete/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Delete(int id)
     {
-        var student = _context.Students.FirstOrDefault(s => s.Id == id);
+        var student = _context.Students.Find(id);
         if (student == null)
         {
-            return NotFound();
+            return Json(new
+            {
+                success = false,
+                message = "Student not found."
+            });
         }
-        return View(student);
-    }
-    // POST: Students/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
-    {
-        var student = _context.Students.FirstOrDefault(s => s.Id == id);
-        if (student != null)
+        try
         {
+            // Remove related student courses first
+            var studentCourses = _context.StudentCourses.Where(sc => sc.StudentId == id);
+            _context.StudentCourses.RemoveRange(studentCourses);
+
+            // Remove the student
             _context.Students.Remove(student);
+
+            // Save all changes at once
             _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                message = "Student deleted successfully."
+            });
         }
-        return RedirectToAction(nameof(Index));
+        catch (Exception ex)
+        {
+            return Json(new
+            {
+                success = false,
+                message = "Error checking student courses: " + ex.Message
+            });
+        }
     }
+
     private string RenderPartialViewToString(string viewName, object model)
     {
         ViewData.Model = model;
@@ -237,11 +255,8 @@ public class StudentsController : Controller
     {
         if (ModelState.IsValid)
         {
-            _context.Update(student);
-            _context.SaveChanges();
-            ViewBag.BasicInfoMode = "Edit";
-            var studentData = _context.Students.FirstOrDefault(s => s.Id == student.Id);
-            if (studentData == null)
+            var existingStudent = _context.Students.FirstOrDefault(s => s.Id == student.Id);
+            if (existingStudent == null)
             {
                 return Json(new
                 {
@@ -250,12 +265,22 @@ public class StudentsController : Controller
                     html = string.Empty
                 });
             }
-            var htmlContent = RenderPartialViewToString("_BasicInfo", studentData);
+            // Update the properties you want
+            existingStudent.Name = student.Name;
+            existingStudent.Email = student.Email;
+            existingStudent.Address = student.Address;
+            existingStudent.Phone = student.Phone;
+            existingStudent.DateOfBirth = student.DateOfBirth;
+            existingStudent.AdmissionDate = student.AdmissionDate;
+
+            _context.SaveChanges();
+            ViewBag.BasicInfoMode = "Edit";
+            var htmlContent = RenderPartialViewToString("_BasicInfo", existingStudent);
             return Json(new
             {
                 success = true,
                 message = "Student updated successfully.",
-                studentId = student.Id,
+                studentId = existingStudent.Id,
                 html = htmlContent
             });
         }
@@ -263,6 +288,7 @@ public class StudentsController : Controller
         {
             success = false,
             message = "Invalid student data",
+            studentId = student.Id,
             html = string.Empty
         });
     }
@@ -403,7 +429,7 @@ public class StudentsController : Controller
                 DueAmount = sc.DueAmount
             }).ToList();
         ViewBag.CoursePaymentFormMode = coursePayments.Any(cp => cp.PaidAmount > 0) ? "Edit" : "Add";
-        var htmlContent = RenderPartialViewToString("_CoursePayment", coursePayments);
+        var htmlContent = RenderPartialViewToString("_CoursePaymentInfo", coursePayments);
         return Json(new
         {
             success = true,

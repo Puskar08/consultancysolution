@@ -1,4 +1,7 @@
 @model List<consultancysolution.Models.CoursePaymentDto>
+@{
+    var disableCoursePaymentFormAttr = (ViewBag.CoursePaymentFormMode == "Add") ? "" : "disabled";
+}
 <div class="CoursePaymentInfo">
     <h5>Course Payments</h5>
     <table class="table table-bordered" id="coursePaymentTable">
@@ -16,26 +19,29 @@
                 <tr data-course-id="@coursePayment.CourseId">
                     <td>@coursePayment.CourseName</td>
                     <td>@coursePayment.Price</td>
-                    <td><input type="number" class="form-control paidAmount" value="@coursePayment.PaidAmount" /></td>
+                    <td><input type="number" class="form-control paidAmount" value="@coursePayment.PaidAmount" @disableCoursePaymentFormAttr/></td>
                     <td class="dueAmount">@coursePayment.DueAmount</td>
                 </tr>
             }
         </tbody>
     </table>
+    <div class="col-sm-12 d-flex justify-content-end gap-2">
+        
     @{
         if (ViewBag.CoursePaymentFormMode == "Edit")
         {
-            <button id="editCoursePayments" class="btn btn-warning float-right">Edit</button>
-            <button id="updateCoursePayments" class="btn btn-success float-right" style="display:none;">Update</button>
-            <button id="cancelCoursePayments" class="btn btn-secondary float-right mr-2" style="display:none;">Cancel</button>
+            <button id="editCoursePayments" class="btn btn-warning">Edit</button>
+            <button id="updateCoursePayments" class="btn btn-success" style="display: none;">Update</button>
+            <button id="cancelCoursePayments" class="btn btn-secondary" style="display: none;">Cancel</button>
         }
         else
         {
-            <button id="saveCoursePayments" class="btn btn-primary float-right">Save Course Payments</button>
+            <button id="saveCoursePayments" class="btn btn-primary">Save Course Payments</button>
         }
     }
-    <button type="button" class="closeBtn btn btn-secondary float-right mr-2"
+    <button type="button" class="closeBtn btn btn-secondary"
         onclick="window.location.href='/Students/Index';">Close</button>
+        </div>
 </div>
 <script>
     function updateCoursePaymentDue() {
@@ -51,14 +57,5 @@
         updateCoursePaymentDue();
     });
     //updateCoursePaymentDue(); // Initialize due amounts
-    $('#editCoursePayments').on("click", function () {
-        $(".paidAmount").prop("disabled", false);
-        $("#updateCoursePayments, #cancelCoursePayments").show();
-        $(this).hide();
-    });
-    $('#cancelCoursePayments').on("click", function () {
-        debugger;
-        loadTabContent(tab, mode, studentId);
-        //$('[data-tab="account"]').click();
-    });
+    
 </script>

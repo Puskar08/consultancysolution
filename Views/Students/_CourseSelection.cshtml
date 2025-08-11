@@ -1,6 +1,7 @@
 @model List<consultancysolution.Models.SelectedCourseDto>
 @{
     var courses = ViewBag.Courses as List<consultancysolution.Models.Course>;
+    var disableAttr = (ViewBag.CourseSelectionMode == "Add") ? "" : "disabled";
 }
 
 <div id="course-selection" class="tab-pane">
@@ -35,11 +36,12 @@
             @foreach (var item in Model)
             {
                 <tr data-id="@item.Id">
-                    <td>@item.CourseName<input type="hidden" name="@item.CourseName" value="@item.Id" /></td>
-                    <td>@item.Price<input type="hidden" name="@item.Price" value="@item.Price" /></td>
-                    <td><input type="number" name="Discount" class="form-control discount" value="@item.Discount" /></td>
+                    <td>@item.CourseName<input type="hidden" name="Courses[@item.Id].Name" value="@item.CourseName" /></td>
+                    <td>@item.Price<input type="hidden" name="Courses[@item.Id].Price" value="@item.Price" /></td>
+                    <td><input type="number" name="Courses[@item.Id].Discount" class="form-control discount"
+                            value="@item.Discount" @disableAttr /></td>
                     <td class="modifiedFee">@item.ModifiedCoursePrice </td>
-                    <td><button type="button" class="btn btn-danger btn-sm delete-row"><i class="fa fa-trash"></i></button>
+                    <td><button type="button" class="btn btn-danger btn-sm delete-row"><i class="fa-solid fa-xmark"></i></button>
                     </td>
                 </tr>
             }
@@ -51,12 +53,12 @@
             if (ViewBag.courseSelectionMode == "Edit")
             {
                 <button id="editCourses" class="btn btn-warning">Edit</button>
-                <button id="updateCourseSelection" class="btn btn-success" style="display:none;">Update</button>
+                <button id="updateCourses" class="btn btn-success" style="display:none;" data-buttonType="edit">Update</button>
                 <button id="cancelCourseSelection" class="btn btn-secondary" style="display:none;">Cancel</button>
             }
             else
             {
-                <button id="saveCourses" class="btn btn-primary">Save</button>
+                <button id="saveCourses" class="btn btn-primary" data-buttonType="add">Save</button>
             }
             <button type="button" class="closeBtn btn btn-secondary"
                 onclick="window.location.href='/Students/Index';">Close</button>
@@ -66,7 +68,6 @@
 
 <script>
     $(document).ready(function () {
-
 
         let addedCourses = new Set();
         //on doropdown change
@@ -89,7 +90,7 @@
                         <td class="modifiedFee">${coursePrice}</td>
                         <td>
                             <button type="button" class="btn btn-danger btn-sm delete-row">
-                                <i class="fa fa-trash"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </td>
                     </tr>
@@ -101,6 +102,7 @@
 
         // Update Modified Fee on discount input
         $('#selectedCourses').on('input', '.discount', function () {
+            debugger;
             const row = $(this).closest('tr');
             const price = parseFloat(row.find('input[name$=".Price"]').val());
             const discount = parseFloat($(this).val()) || 0;
@@ -117,7 +119,8 @@
         });
     });
     // Save courses
-    function saveCourses() {
+    function saveCourses(buttonType) {
+        debugger;
         const studentId = $('#StudentID').val();
         const data = [];
 
@@ -139,14 +142,27 @@
                 if (response.success) {
                     $('#tab-content').html(response.html);
                     Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
                         icon: 'success',
                         title: 'Success',
                         text: response.message || 'Courses saved successfully.'
                     });
-                    $('[data-tab="account"]').removeClass('disabled');
-                    $('[data-tab="account"]').click();
+                    debugger;
+                    var courseSelectionMode = '@ViewBag.CourseSelectionMode';
+                    if (courseSelectionMode == "Add") {
+                        $('[data-tab="account"]').click(); // Automatically navigate to the next tab
+                    }
                 } else {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
                         icon: 'error',
                         title: 'Error',
                         text: response.message || 'Failed to save courses.'
@@ -155,6 +171,11 @@
             },
             error: function () {
                 Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
                     icon: 'error',
                     title: 'Error',
                     text: 'An error occurred while saving courses.'
@@ -163,18 +184,17 @@
         });
     }
     $('#saveCourses ,#updateCourses').on('click', function () {
-        saveCourses();
+        saveCourses(this.dataset.buttonType);
     });
     // Edit courses
     $('#editCourses').on('click', function () {
         $('#selectedCourses .discount').prop('disabled', false);
-        $('#updateCourseSelection, #cancelCourseSelection').show();
+        $('#updateCourses, #cancelCourseSelection').show();
         $(this).hide();
     });
     // Cancel course selection
     $('#cancelCourseSelection').on('click', function () {
-        loadTabContent("course-selection", mode, studentId);
-        //$('[data-tab="course-selection"]').click();
+        $('[data-tab="course-selection"]').click();
     });
 
 </script>

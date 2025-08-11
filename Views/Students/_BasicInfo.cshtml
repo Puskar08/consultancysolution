@@ -119,17 +119,19 @@
                             toast: true,
                             position: 'top-end',
                             icon: 'success',
-                            title: 'Success!',
-                            text: response.message || 'Basic info saved successfully, continue to course selection.',
+                            title: response.message || 'Basic info saved successfully, continue to course selection.',
                             showConfirmButton: false,
                             timer: 2000,
                             timerProgressBar: true
                         });
+                        debugger;
 
                         // Enable next tabs
                         if (clickedButtonType == "add" || clickedButtonType == "edit") {
-                            $('[data-tab="course-selection"]').removeClass('disabled');
-                            $('[data-tab="account"]').removeClass('disabled');
+                            $('[data-tab="course-selection"]').prop('disabled', false);
+                            $('[data-tab="account"]').prop('disabled', false);
+                        }
+                        if(clickedButtonType == "add") {
                             // Automatically navigate to the next tab
                             $('[data-tab="course-selection"]').click();
                         }

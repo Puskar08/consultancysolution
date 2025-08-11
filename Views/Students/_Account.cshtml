@@ -4,16 +4,14 @@
     <div class="admission-container">
         <partial name="_AdmissionInfo" model="Model.Admission" />
     </div>
-    <div class="coursePayment-ontainer">
+    <div class="coursePayment-container">
         <partial name="_CoursePaymentInfo" model="Model.CoursePayments" />
     </div>
 </div>
-<script>
-    const studentId = $('#StudentID').val();
-
+<script>  
     //save admission fee
     function saveAdmissionFee(url) {
-        const admissionFee = parseFloat($("#admissionFee").text()) || 0;
+        const admissionFee = parseFloat($("#admissionFee").val()) || 0;
         const discount = parseFloat($("#admissionFeeDiscount").val()) || 0;
         const modifiedFee = parseFloat($("#modifiedAdmissionFee").text()) || 0;
         const paid = parseFloat($("#paidAdmissionAmount").val()) || 0;
@@ -34,7 +32,8 @@
             contentType: 'application/json',
             success: function (response) {
                 if (response.success) {
-                    $('#admission-container').html(response.html);
+                    debugger;
+                    $('.admission-container').html(response.html);
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
@@ -62,12 +61,27 @@
             }
         });
     }
-    $("#saveAdmissionFee, #updateAdmissionFee").click(function () {
-        saveAdmissionFee(`/Students/SaveAdmissionFee?studentId=${studentId}`);
+    $(document)
+        .off('click', "#saveAdmissionFee, #updateAdmissionFee")
+        .on('click', "#saveAdmissionFee, #updateAdmissionFee", function () {
+      saveAdmissionFee(`/Students/SaveAdmissionFee?studentId=${$('#StudentID').val()}`);
+  });
+  $(document)
+    .off('click', '#editAdmissionFee')
+    .on('click', '#editAdmissionFee', function () {
+        $("#admissionFee, #admissionFeeDiscount, #paidAdmissionAmount").prop("disabled", false);
+        $("#updateAdmissionFee, #cancelAdmissionFee").show();
+        $(this).hide();
     });
 
+    $(document)
+        .off('click', '#cancelAdmissionFee')
+        .on('click', '#cancelAdmissionFee', function () {
+            $('[data-tab="account"]').click();
+        });
     //save course payments
     function submitCoursePayments(url) {
+        debugger;
         const coursePayments = [];
         $("#coursePaymentTable tbody tr").each(function () {
             const row = $(this);
@@ -93,7 +107,8 @@
             data: JSON.stringify(coursePayments),
             success: function (response) {
                 if (response.success) {
-                    $('#coursePayment-container').html(response.html);
+                    debugger;
+                    $('.coursePayment-container').html(response.html);
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
@@ -115,8 +130,23 @@
             }
         });
     }
-    $('#saveCoursePayments, #updateCoursePayments').click(function () {
-        const saveUrl = `/Students/SaveCoursePayments?studentId=${studentId}`;
-        submitCoursePayments(saveUrl);
-    })
+    $(document)
+        .off('click', '#saveCoursePayments, #updateCoursePayments')
+        .on('click', '#saveCoursePayments, #updateCoursePayments',function () {
+            const saveUrl = `/Students/SaveCoursePayments?studentId=${$('#StudentID').val()}`;
+            submitCoursePayments(saveUrl);
+        });
+
+    $(document)
+        .off('click', '#editCoursePayments')
+        .on("click", '#editCoursePayments', function () {
+            $(".paidAmount").prop("disabled", false);
+            $("#updateCoursePayments, #cancelCoursePayments").show();
+            $(this).hide();
+    });
+    $(document)
+    .off('click', '#cancelCoursePayments')
+    .on("click", '#cancelCoursePayments', function () {
+        $('[data-tab="account"]').click();
+    });
 </script>
