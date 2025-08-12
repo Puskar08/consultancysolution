@@ -16,6 +16,7 @@
                 <th>Phone</th>
                 <th>Admission Date</th>
                 <th>Courses</th>
+                <th>Total Cost</th>
                 <th>Paid</th>
                 <th>Due</th>
                 <th></th>
@@ -23,7 +24,12 @@
         </thead>
         <tbody>
             @foreach (var student in Model)
-            {
+            {   var totalCost = student.AdmissionCost - student.Discount + (student.StudentCourses != null ?
+                student.StudentCourses.Sum(sc => sc.ModifiedCoursePrice) : 0);
+                var totalPaid = student.PaidAdmissionAmount + (student.StudentCourses != null ?
+                student.StudentCourses.Sum(sc => sc.PaidAmount) : 0);
+                var totalDue = (student.AdmissionCost - student.Discount - student.PaidAdmissionAmount) +
+                (student.StudentCourses?.Sum(sc => sc.ModifiedCoursePrice) ?? 0) - (student.StudentCourses?.Sum(sc => sc.PaidAmount) ?? 0);
                 <tr data-studentId="@student.Id">
                     <td><a asp-controller="Students" asp-action="Form" asp-route-mode="Edit"
                             asp-route-studentId="@student.Id" class="text-primary-emphasis text-decoration-none"
@@ -35,15 +41,19 @@
                     <td>@student.Address</td>
                     <td>@student.Phone</td>
                     <td>@student.AdmissionDate.ToShortDateString()</td>
+                    @{
+                        var badgeClasses = new[] { "secondary", "success", "primary", "info", "dark" };
+                    }
                     <td>
                         @if (student.StudentCourses != null && student.StudentCourses.Any())
                         {
                             foreach (var course in student.StudentCourses)
                             {
-                                <a asp-action="Details" asp-controller="Course" asp-route-id="@course.CourseId"
-                                    class="btn btn-primary btn-sm me-1">
+                                // Use course ID modulo badgeClasses length to pick color consistently
+                                var colorClass = badgeClasses[course.CourseId % badgeClasses.Length];
+                                <span class="badge bg-@colorClass">
                                     @course.Course.Name
-                                </a>
+                                </span>
                             }
                         }
                         else
@@ -51,8 +61,9 @@
                             <span class="text-muted">No Courses</span>
                         }
                     </td>
-                    <td>1000</td>
-                    <td>500</td>
+                    <td>@totalCost.ToString("N2")</td>
+                    <td>@totalPaid.ToString("N2")</td>
+                    <td>@totalDue.ToString("N2")</td>
                     <td><button class="action-btn deleteStudent" data-id="@student.Id" data-name="@student.Name">
                             <i class="fas fa-trash-alt"></i>
                         </button>

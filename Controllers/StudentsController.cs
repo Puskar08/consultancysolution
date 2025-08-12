@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
 
 namespace consultancysolution.Controllers;
 
@@ -18,8 +19,11 @@ public class StudentsController : Controller
     }
     public IActionResult Index()
     {
-        var students = _context.Students.ToList();
-        return View(students);
+        var studentsWithCourses = _context.Students
+                        .Include(s => s.StudentCourses)
+                        .ThenInclude(sc => sc.Course)
+                        .ToList();
+        return View(studentsWithCourses);
     }
     // GET: Students/Create
     public IActionResult Create()
