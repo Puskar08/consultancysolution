@@ -1,0 +1,122 @@
+<div class="page">
+    <div class="page-body">
+        <div class="dashboard">
+            <div class="row1">
+                <div class="card">
+                    <div class="card-title">Course Distribution</div>
+                    <div id="donutChart"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Course Distribution</div>
+                    <div id="donutChart2"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Course Distribution</div>
+                    <div id="donutChart3"></div>
+                </div>
+            </div>
+            <div class="row2">
+                <div class="card">
+                    <div class="card-title">Monthly Visitors</div>
+                    <div id="lineChart"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Monthly Visitors</div>
+                    <div id="lineChart2"></div>
+                </div>
+            </div>
+            <div class="row3">
+                <div class="card">
+                    <div class="card-title">Monthly Visitors</div>
+                    <div id="lineChart3"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Donut Chart
+        var donutOptions = {
+            series: [44, 55],
+            chart: {
+                type: 'donut',
+                height: 350
+            },
+            labels: ['Male', 'Female', 'Other'],
+            colors: ['#26de81', '#a55eea', '#fd9644'],
+            legend: {
+                position: 'bottom'
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 200
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+
+        var donutChart = new ApexCharts(document.querySelector("#donutChart"), donutOptions);
+        donutChart.render();
+        var donutChart2 = new ApexCharts(document.querySelector("#donutChart2"), donutOptions);
+        donutChart2.render();
+        var donutChart3 = new ApexCharts(document.querySelector("#donutChart3"), donutOptions);
+        donutChart3.render();
+
+        // Line Chart
+        var lineOptions = {
+            series: [{
+                name: "Visitors",
+                data: [30, 40, 45, 50, 49, 60, 70, 91, 125, 150, 180, 210]
+            }],
+            chart: {
+                height: 350,
+                type: 'line',
+                zoom: {
+                    enabled: false
+                },
+                toolbar: {
+                    show: false
+                }
+            },
+            colors: ['#4b7bec'],
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            markers: {
+                size: 5,
+                hover: {
+                    size: 7
+                }
+            },
+            xaxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val + " visitors"
+                    }
+                }
+            }
+        };
+
+        var lineChart = new ApexCharts(document.querySelector("#lineChart"), lineOptions);
+        lineChart.render();
+        var lineChart2 = new ApexCharts(document.querySelector("#lineChart2"), lineOptions);
+        lineChart2.render();
+        var lineChart3 = new ApexCharts(document.querySelector("#lineChart3"), lineOptions);
+        lineChart3.render();
+    });
+</script>

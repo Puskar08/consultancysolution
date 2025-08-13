@@ -2,76 +2,85 @@
 @{
     ViewData["Title"] = "Students";
 }
-<div class="container mt-4">
-    <h1 class="text-center">Students</h1>
-    <p class="text-center">Discover and manage students information.</p>
-    <a asp-controller="Students" asp-action="Create" class="btn btn-success">Add Student</a>
-    @Html.AntiForgeryToken()
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Address</th>
-                <th>Phone</th>
-                <th>Admission Date</th>
-                <th>Courses</th>
-                <th>Total Cost</th>
-                <th>Paid</th>
-                <th>Due</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var student in Model)
-            {   var totalCost = student.AdmissionCost - student.Discount + (student.StudentCourses != null ?
-                student.StudentCourses.Sum(sc => sc.ModifiedCoursePrice) : 0);
-                var totalPaid = student.PaidAdmissionAmount + (student.StudentCourses != null ?
-                student.StudentCourses.Sum(sc => sc.PaidAmount) : 0);
-                var totalDue = (student.AdmissionCost - student.Discount - student.PaidAdmissionAmount) +
-                (student.StudentCourses?.Sum(sc => sc.ModifiedCoursePrice) ?? 0) - (student.StudentCourses?.Sum(sc => sc.PaidAmount) ?? 0);
-                <tr data-studentId="@student.Id">
-                    <td><a asp-controller="Students" asp-action="Form" asp-route-mode="Edit"
-                            asp-route-studentId="@student.Id" class="text-primary-emphasis text-decoration-none"
-                            style="cursor: pointer;">
-                            @student.Name
-                        </a>
-                    </td>
-                    <td>@student.Email</td>
-                    <td>@student.Address</td>
-                    <td>@student.Phone</td>
-                    <td>@student.AdmissionDate.ToShortDateString()</td>
-                    @{
-                        var badgeClasses = new[] { "secondary", "success", "primary", "info", "dark" };
-                    }
-                    <td>
-                        @if (student.StudentCourses != null && student.StudentCourses.Any())
-                        {
-                            foreach (var course in student.StudentCourses)
-                            {
-                                // Use course ID modulo badgeClasses length to pick color consistently
-                                var colorClass = badgeClasses[course.CourseId % badgeClasses.Length];
-                                <span class="badge bg-@colorClass">
-                                    @course.Course.Name
-                                </span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="text-muted">No Courses</span>
-                        }
-                    </td>
-                    <td>@totalCost.ToString("N2")</td>
-                    <td>@totalPaid.ToString("N2")</td>
-                    <td>@totalDue.ToString("N2")</td>
-                    <td><button class="action-btn deleteStudent" data-id="@student.Id" data-name="@student.Name">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
+<div class="page">
+    <div class="page-header">
+        <h1 class="text-center">Students</h1>
+        <p class="text-center">Discover and manage students information.</p>
+        <a asp-controller="Students" asp-action="Create" class="btn btn-success">Add Student</a>
+
+    </div>
+    <div class="page-body">
+
+        <table>
+            @Html.AntiForgeryToken()
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Admission Date</th>
+                    <th>Courses</th>
+                    <th>Total Cost</th>
+                    <th>Paid</th>
+                    <th>Due</th>
+                    <th></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var student in Model)
+                {
+                    var totalCost = student.AdmissionCost - student.Discount + (student.StudentCourses != null ?
+                    student.StudentCourses.Sum(sc => sc.ModifiedCoursePrice) : 0);
+                    var totalPaid = student.PaidAdmissionAmount + (student.StudentCourses != null ?
+                    student.StudentCourses.Sum(sc => sc.PaidAmount) : 0);
+                    var totalDue = (student.AdmissionCost - student.Discount - student.PaidAdmissionAmount) +
+                    (student.StudentCourses?.Sum(sc => sc.ModifiedCoursePrice) ?? 0) - (student.StudentCourses?.Sum(sc =>
+                    sc.PaidAmount) ?? 0);
+                    <tr data-studentId="@student.Id">
+                        <td><a asp-controller="Students" asp-action="Form" asp-route-mode="Edit"
+                                asp-route-studentId="@student.Id" class="text-primary-emphasis text-decoration-none"
+                                style="cursor: pointer;">
+                                @student.Name
+                            </a>
+                        </td>
+                        <td>@student.Email</td>
+                        <td>@student.Address</td>
+                        <td>@student.Phone</td>
+                        <td>@student.AdmissionDate.ToShortDateString()</td>
+                        @{
+                            var badgeClasses = new[] { "secondary", "success", "primary", "info", "dark" };
+                        }
+                        <td>
+                            @if (student.StudentCourses != null && student.StudentCourses.Any())
+                            {
+                                foreach (var course in student.StudentCourses)
+                                {
+                                    // Use course ID modulo badgeClasses length to pick color consistently
+                                    var colorClass = badgeClasses[course.CourseId % badgeClasses.Length];
+                                    <span class="badge bg-@colorClass">
+                                        @course.Course.Name
+                                    </span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No Courses</span>
+                            }
+                        </td>
+                        <td>@totalCost.ToString("N2")</td>
+                        <td>@totalPaid.ToString("N2")</td>
+                        <td>@totalDue.ToString("N2")</td>
+                        <td><button class="action-btn deleteStudent" data-id="@student.Id" data-name="@student.Name">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
 </div>
 <script>
     // Function to get the anti-forgery token from the page
