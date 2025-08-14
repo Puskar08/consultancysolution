@@ -3,36 +3,41 @@
 @{
     ViewData["Title"] = "Create Course";
 }
-
-<div class="container mt-4">
-    <h1 class="text-center">Add a New Course</h1>
-    <form asp-action="Create" method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="Name" class="form-label">Course Name</label>
-            <input type="text" class="form-control" id="Name" name="Name" value="@Model?.Name" required>
+<div class="page">
+    <div class="page-body">
+        <div class="container mt-4">
+            <h1 class="text-center">Add a New Course</h1>
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="Name" class="form-label">Course Name</label>
+                    <input type="text" class="form-control" id="Name" name="Name" value="@Model?.Name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="Description" class="form-label">Description</label>
+                    <textarea class="form-control" id="Description" name="Description" rows="3"
+                        required>@Model?.Description</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="Duration" class="form-label">Duration</label>
+                    <input type="text" class="form-control" id="Duration" name="Duration" value="@Model?.Duration"
+                        required>
+                </div>
+                <div class="mb-3">
+                    <label for="Price" class="form-label">Price</label>
+                    <input type="text" class="form-control" id="Price" name="Price" value="@Model?.Price" required>
+                </div>
+                <div class="mb-3">
+                    <label for="Category" class="form-label">Category</label>
+                    <input type="text" class="form-control" id="Category" name="Category" value="@Model?.Category"
+                        required>
+                </div>
+                <div class="mb-3">
+                    <label for="ImageFile" class="form-label">Upload Image</label>
+                    <input type="file" class="form-control" id="ImageFile" name="ImageFile" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Course</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </form>
         </div>
-        <div class="mb-3">
-            <label for="Description" class="form-label">Description</label>
-            <textarea class="form-control" id="Description" name="Description" rows="3"
-                required>@Model?.Description</textarea>
-        </div>
-        <div class="mb-3">
-            <label for="Duration" class="form-label">Duration</label>
-            <input type="text" class="form-control" id="Duration" name="Duration" value="@Model?.Duration" required>
-        </div>
-        <div class="mb-3">
-            <label for="Price" class="form-label">Price</label>
-            <input type="text" class="form-control" id="Price" name="Price" value="@Model?.Price" required>
-        </div>
-        <div class="mb-3">
-            <label for="Category" class="form-label">Category</label>
-            <input type="text" class="form-control" id="Category" name="Category" value="@Model?.Category" required>
-        </div>
-        <div class="mb-3">
-            <label for="ImageFile" class="form-label">Upload Image</label>
-            <input type="file" class="form-control" id="ImageFile" name="ImageFile" accept="image/*" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Add Course</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
 </div>

@@ -8,6 +8,9 @@ namespace consultancysolution.Models
         public string Phone { get; set; }
         public string Address { get; set; }
         public DateTime DateOfBirth { get; set; }
+        public string Gender { get; set; }
+        public string? ProfilePhotoUrl { get; set; }
+        public string? PassportUrl { get; set; }
         //Admission Details
         public DateTime AdmissionDate { get; set; } = DateTime.Now;
         public decimal AdmissionCost { get; set; }

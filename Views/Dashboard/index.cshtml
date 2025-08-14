@@ -3,50 +3,53 @@
         <div class="dashboard">
             <div class="row1">
                 <div class="card">
-                    <div class="card-title">Course Distribution</div>
-                    <div id="donutChart"></div>
+                    <div class="card-title">Gender Distribution</div>
+                    <div id="genderDistributionDonutChart"></div>
                 </div>
                 <div class="card">
                     <div class="card-title">Course Distribution</div>
-                    <div id="donutChart2"></div>
+                    <div id="studentPerCoursePieChart"></div>
                 </div>
                 <div class="card">
-                    <div class="card-title">Course Distribution</div>
+                    <div class="card-title">Rececnt Events</div>
                     <div id="donutChart3"></div>
                 </div>
             </div>
             <div class="row2">
                 <div class="card">
-                    <div class="card-title">Monthly Visitors</div>
-                    <div id="lineChart"></div>
+                    <div class="card-title">Monthly Enrollment</div>
+                    <div id="monthlyEnrollmentLineChart"></div>
                 </div>
                 <div class="card">
                     <div class="card-title">Monthly Visitors</div>
                     <div id="lineChart2"></div>
                 </div>
             </div>
-            <div class="row3">
+            @* <div class="row3">
                 <div class="card">
                     <div class="card-title">Monthly Visitors</div>
                     <div id="lineChart3"></div>
                 </div>
-            </div>
+            </div> *@
 
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Donut Chart
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Create chart instance globally so we can update it later
         var donutOptions = {
-            series: [44, 55],
+            series: [], // will be filled dynamically
             chart: {
                 type: 'donut',
-                height: 350
+                height: 350,
+                toolbar: {
+                    show: true
+                }
             },
-            labels: ['Male', 'Female', 'Other'],
-            colors: ['#26de81', '#a55eea', '#fd9644'],
+            labels: [], // will be filled dynamically
+            colors: ['#26de81', '#a55eea', '#fd9644', '#45aaf2', '#fed330'], // add more colors for extra genders
             legend: {
                 position: 'bottom'
             },
@@ -62,15 +65,209 @@
                 }
             }]
         };
-
-        var donutChart = new ApexCharts(document.querySelector("#donutChart"), donutOptions);
+        var donutChart = new ApexCharts(document.querySelector("#genderDistributionDonutChart"), donutOptions);
         donutChart.render();
-        var donutChart2 = new ApexCharts(document.querySelector("#donutChart2"), donutOptions);
-        donutChart2.render();
-        var donutChart3 = new ApexCharts(document.querySelector("#donutChart3"), donutOptions);
-        donutChart3.render();
+        // Fetch data dynamically
+        async function fetchGenderDonutChart() {
+            try {
+                const response = await fetch('/Dashboard/GetGenderCounts');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-        // Line Chart
+                const data = await response.json();
+                const labels = data.map(item => item.label);
+                const series = data.map(item => item.value);
+
+                donutChart.updateOptions({ labels: labels, noData: { text: '' } });
+                donutChart.updateSeries(series);
+
+            } catch (error) {
+                console.error('Error fetching gender counts:', error);
+
+                // Show SweetAlert
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Failed to load gender distribution.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+
+                // Show error text inside the chart
+                donutChart.updateOptions({
+                    labels: [],
+                    series: [],
+                    noData: {
+                        text: "⚠ Failed to load chart data",
+                        align: 'center',
+                        verticalAlign: 'middle',
+                        style: {
+                            color: '#ff4d4f',
+                            fontSize: '16px'
+                        }
+                    }
+                });
+            }
+        }
+        fetchGenderDonutChart();
+
+        var studentsInCoursePieChartOptions = {
+            series: [], // will be filled dynamically
+            chart: {
+                type: 'pie',
+                height: 350,
+                toolbar: {
+                    show: true
+                }
+            },
+            labels: [], // will be filled dynamically
+            colors: ['#26de81', '#a55eea', '#fd9644', '#45aaf2', '#fed330'], // add more colors for extra genders
+            legend: {
+                position: 'bottom'
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 200
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+        var studentsInCoursePieChart = new ApexCharts(document.querySelector("#studentPerCoursePieChart"), studentsInCoursePieChartOptions);
+        studentsInCoursePieChart.render();
+        // Fetch data dynamically
+        async function fetchStudentsInCoursePieChart() {
+            try {
+                const response = await fetch('/Dashboard/GetCourseCounts');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const labels = data.map(item => item.label);
+                const series = data.map(item => item.value);
+
+                studentsInCoursePieChart.updateOptions({ labels: labels, noData: { text: '' } });
+                studentsInCoursePieChart.updateSeries(series);
+
+            } catch (error) {
+                console.error('Error fetching students in course counts:', error);
+
+                // Show SweetAlert
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Failed to load course distribution.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+
+                // Show error text inside the chart
+                studentsInCoursePieChart.updateOptions({
+                    labels: [],
+                    series: [],
+                    noData: {
+                        text: "⚠ Failed to load chart data",
+                        align: 'center',
+                        verticalAlign: 'middle',
+                        style: {
+                            color: '#ff4d4f',
+                            fontSize: '16px'
+                        }
+                    }
+                });
+            }
+        }
+        fetchStudentsInCoursePieChart();
+
+        // Initialize empty chart first
+        var monthlyEnrollmentLineChartOptions = {
+            chart: { type: 'line', height: 350, zoom: { enabled: false } },
+            series: [{ name: 'Students', data: [] }],
+            xaxis: { categories: [] },
+            stroke: { curve: 'smooth' },
+            markers: { size: 5 },
+            tooltip: { x: { format: 'MMMM yyyy' } },
+            noData: { text: 'Loading chart...' }
+        };
+
+        var monthlyEnrollmentLineChart = new ApexCharts(document.querySelector("#monthlyEnrollmentLineChart"), monthlyEnrollmentLineChartOptions);
+        monthlyEnrollmentLineChart.render();
+
+        // Fetch data and update chart
+        async function fetchMonthlyEnrollment() {
+            try {
+                const response = await fetch('/Dashboard/GetMonthlyEnrollment'); // API endpoint
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+                debugger;
+                // Map received data to chart-ready format
+                const chartData = data.map(item => {
+                    const monthName = new Date(item.year, item.month - 1).toLocaleString('default', { month: 'short' });
+                    return {
+                        label: `${monthName} ${item.year}`,
+                        value: item.count
+                    };
+                });
+
+                // Now validate
+                const validData = chartData.filter(item => item.label && item.value != null);
+
+                const labels = validData.map(item => item.label);
+                const seriesData = validData.map(item => Number(item.value) || 0);
+
+                if (labels.length && seriesData.length) {
+                    monthlyEnrollmentLineChart.updateOptions({ xaxis: { categories: labels } });
+                    monthlyEnrollmentLineChart.updateSeries([{ name: 'Students', data: seriesData }]);
+                } else {
+                    monthlyEnrollmentLineChart.updateOptions({
+                        series: [],
+                        xaxis: { categories: [] },
+                        noData: { text: "⚠ No enrollment data available" }
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error fetching monthly enrollment:', error);
+
+                // Show SweetAlert error
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Failed to load monthly enrollment chart.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+
+                // Display error inside chart
+                monthlyEnrollmentLineChart.updateOptions({
+                    series: [],
+                    xaxis: { categories: [] },
+                    noData: { text: "⚠ Failed to load chart data" }
+                });
+            }
+        }
+        fetchMonthlyEnrollment();
+
+        @* var donutChart3 = new ApexCharts(document.querySelector("#donutChart3"), donutOptions);
+        donutChart3.render(); *@
+
+            @* // Line Chart
         var lineOptions = {
             series: [{
                 name: "Visitors",
@@ -112,11 +309,9 @@
             }
         };
 
-        var lineChart = new ApexCharts(document.querySelector("#lineChart"), lineOptions);
-        lineChart.render();
         var lineChart2 = new ApexCharts(document.querySelector("#lineChart2"), lineOptions);
         lineChart2.render();
         var lineChart3 = new ApexCharts(document.querySelector("#lineChart3"), lineOptions);
-        lineChart3.render();
+        lineChart3.render(); *@
     });
 </script>

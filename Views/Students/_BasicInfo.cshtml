@@ -1,6 +1,7 @@
 @model Students
 @{
     var disableAttr = (ViewBag.BasicInfoMode == "Add") ? "" : "disabled";
+    var displayAttr = (ViewBag.BasicInfoMode == "Add") ? "block" : "none";
 }
 <style>
     .form-group {
@@ -11,10 +12,97 @@
         text-align: left;
         cursor: pointer;
     }
+
+    .profile-photo-container {
+        width: 150px;
+        height: 150px;
+        border: 1px solid #ccc;
+        display: flex;
+        overflow: hidden;
+        margin: 0 auto 10px auto;
+        @* margin-bottom: 10px; *@
+        background-color: #f8f8f8;
+        position: relative;
+    }
+
+    .profile-photo {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+        top: 0;
+        left: 0;
+    }
+
+    .profile-photo-placeholder {
+        color: #888;
+        font-size: 14px;
+        text-align: center;
+        padding: 10px;
+        width: 100%;
+        z-index: 1; /* Ensure placeholder is above image */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .photo-upload-button {
+        width: 150px;
+        height: 30px;
+        border: 1px solid #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+        color: #333;
+        text-align: center;
+        border-radius: 4px;
+        margin: 0 auto;
+    }
+
+    .photo-upload-button:hover {
+        background-color: #f0f0f0;
+    }
+    .form-check {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 1rem;
+    margin-bottom: 0;
+}
+.form-check-label {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
 </style>
 <div id="basic-info" class="tab-pane active">
     <form id="studentForm" class="form-horizontal" method="post">
-        <input type="hidden" id="StudentId" name="StudentId" value="@Model.Id">
+        <input type="hidden" id="StudentId" name="Id" value="@Model.Id">
+        <div class="form-group row">
+            <div class="col-md-12">
+                <div class="profile-photo-container center" id="photoPreviewContainer">
+                    <img id="photoPreview" class="profile-photo" src="@Model.ProfilePhotoUrl" alt="Profile Photo"
+                        style="@(string.IsNullOrEmpty(Model.ProfilePhotoUrl) ? "display:none;" : "")" />
+                    <span class="profile-photo-placeholder"
+                        style="@(!string.IsNullOrEmpty(Model.ProfilePhotoUrl) ? "display:none;" : "")">No Photo
+                        Selected</span>
+                </div>
+                <input type="file" style="display:none" class="form-control" id="ProfilePhoto" accept="image/*"
+                    name="ProfilePhoto" onchange="previewImage(event)" />
+                <div class="photo-upload-button" style="display: @displayAttr;">
+                    @{
+                        if (ViewBag.BasicInfoMode == "Add")
+                        {
+                            <span>Upload</span>
+                        }
+                        else if (ViewBag.BasicInfoMode == "Edit")
+                        {
+                            <span>Change</span>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
         <div class="form-group row">
             <label for="Name" class="col-sm-2 col-form-label">Name</label>
             <div class="col-sm-4">
@@ -36,23 +124,54 @@
                     @disableAttr>
             </div>
 
+            <label for="Gender" class="col-sm-2 col-form-label">Gender</label>
+            <div class="col-sm-4">
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="GenderMale" name="Gender" value="Male" required
+                        @((Model.Gender == "Male") ? "checked" : "") @((ViewBag.BasicInfoMode == "Add") ? "" : "disabled")>
+                    <label class="form-check-label" for="GenderMale">Male</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="GenderFemale" name="Gender" value="Female"
+                        @((Model.Gender == "Female") ? "checked" : "") @((ViewBag.BasicInfoMode == "Add") ? "" : "disabled")>
+                    <label class="form-check-label" for="GenderFemale">Female</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="GenderOther" name="Gender" value="Other"
+                        @((Model.Gender == "Other") ? "checked" : "") @((ViewBag.BasicInfoMode == "Add") ? "" : "disabled")>
+                    <label class="form-check-label" for="GenderOther">Other</label>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="form-group row">
             <label for="Address" class="col-sm-2 col-form-label">Address</label>
             <div class="col-sm-4">
                 <input type="text" id="Address" class="form-control" name="Address" value="@Model.Address" @disableAttr>
             </div>
-        </div>
 
-        <div class="form-group row">
             <label for="DateofBirth" class="col-sm-2 col-form-label">Date of Birth</label>
             <div class="col-sm-4">
                 <input type="date" id="DateofBirth" class="form-control" name="DateOfBirth"
                     value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" required @disableAttr>
             </div>
-
+        </div>
+        <div class="form-group row">
             <label for="AdmissionDate" class="col-sm-2 col-form-label">Admission Date</label>
             <div class="col-sm-4">
                 <input type="date" class="form-control" id="AdmissionDate" name="AdmissionDate"
                     value="@Model.AdmissionDate.ToString("yyyy-MM-dd")" required @disableAttr>
+            </div>
+
+            <label for="Passport" class="col-sm-2 col-form-label">Passport</label>
+            <div class="col-sm-4">
+                <input type="file" class="form-control" id="Passport" accept=".pdf,.doc,.docx"
+                    name="Passport" @disableAttr/>
+                @if (!string.IsNullOrEmpty(Model.PassportUrl))
+                {
+                    <small class="text-muted">Current Passport: <a href="@Model.PassportUrl" target="_blank">View</a></small>
+                }
             </div>
         </div>
 
@@ -77,38 +196,46 @@
 </div>
 <script>
     $(document).ready(function () {
-        debugger;
         let clickedButtonType = null;
         let mode = $('#mode').val();
 
         $('#editBasicInfo').on('click', function () {
-            debugger;
+            $('.photo-upload-button').show();
             $('#studentForm input').prop('disabled', false);
             $('#updateBasicInfo, #cancelBasicInfo').show();
             $('.closeBtn').hide();
             $(this).hide();
         })
         $('#cancelBasicInfo').on('click', function () {
-            debugger;
             $('[data-tab="basic-info"]').click();
         });
         $('#studentForm button[type="submit"]').on('click', function (e) {
-            debugger;
             clickedButtonType = this.dataset.buttontype;
         })
 
+        $('.photo-upload-button').on('click', function (e) {
+            e.preventDefault();
+            const fileInput = $('#ProfilePhoto');
+            if (fileInput.length) {
+                fileInput[0].click();
+            } else {
+                console.error('File input #ProfilePhoto not found');
+            }
+        });
+
         $('#studentForm').on('submit', function (e) {
-            debugger;
             e.preventDefault();
             let stringUrl = clickedButtonType == "add" ? '/Students/CreateStudentOnly' : '/Students/ModifyStudent';
-            const formData = $(this).serialize();
+            @* const formData = $(this).serialize(); *@
+            const formData = new FormData(this);
             $.ajax({
                 url: stringUrl,
                 type: 'POST',
                 data: formData,
+                contentType: false,
+                processData: false,
                 success: function (response) {
                     if (response.success) {
-                        debugger;
                         // Update the browser URL
                         history.replaceState(null, '', `/Students/Form?mode=${mode}&studentId=${response.studentId}`);
                         // Update hidden field
@@ -124,14 +251,13 @@
                             timer: 2000,
                             timerProgressBar: true
                         });
-                        debugger;
 
                         // Enable next tabs
                         if (clickedButtonType == "add" || clickedButtonType == "edit") {
                             $('[data-tab="course-selection"]').prop('disabled', false);
                             $('[data-tab="account"]').prop('disabled', false);
                         }
-                        if(clickedButtonType == "add") {
+                        if (clickedButtonType == "add") {
                             // Automatically navigate to the next tab
                             $('[data-tab="course-selection"]').click();
                         }

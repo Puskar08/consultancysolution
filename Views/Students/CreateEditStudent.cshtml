@@ -33,26 +33,69 @@
     int studentId = (int)(ViewData["StudentId"] ?? 0);
     var tabDisabledAttribute = studentId > 0 ? "" : "disabled";
 }
-<input type="hidden" id="StudentID" value="@studentId" />
-<input type="hidden" id="mode" value="@mode" />
-<div class="container mt-4">
-    <!--Nav Tabs-->
-    <div class="step-nav" id="studentTabs"">
-        <button class=" step-button active" data-tab="basic-info">Basic Info</button>
-        <button class="step-button" data-tab="course-selection" @tabDisabledAttribute>Course Selection</button>
-        <button class="step-button" data-tab="account" @tabDisabledAttribute>Account</button>
-    </div>
-    <!--Tab Content-->
-    <div id="tab-content" class="mt-4">
-        <!--content for the active tab-->
-    </div>
+<div class="page">
+    <div class="page-body">
+        <input type="hidden" id="StudentID" value="@studentId" />
+        <input type="hidden" id="mode" value="@mode" />
+        <div class="container mt-4">
+            <!--Nav Tabs-->
+            <div class="step-nav" id="studentTabs"">
+                <button class=" step-button active" data-tab="basic-info">Basic Info</button>
+                <button class="step-button" data-tab="course-selection" @tabDisabledAttribute>Course Selection</button>
+                <button class="step-button" data-tab="account" @tabDisabledAttribute>Account</button>
+            </div>
+            <!--Tab Content-->
+            <div id="tab-content" class="mt-4">
+                <!--content for the active tab-->
+            </div>
 
+        </div>
+    </div>
 </div>
+
 <script>
+    function previewImage(event) {
+        debugger;
+        console.log('previewImage called'); // Confirm function is called
+        const input = event.target;
+        const preview = document.getElementById('photoPreview');
+        const placeholder = document.getElementById('photoPreviewContainer').querySelector('.profile-photo-placeholder');
+
+        if (!input || !preview || !placeholder) {
+            console.error('Missing DOM elements:', { input: !!input, preview: !!preview, placeholder: !!placeholder });
+            return;
+        }
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (!file.type.startsWith('image/')) {
+                console.error('Selected file is not an image:', file.type);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                if (e.target.result) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    console.log('Image preview updated successfully');
+                } else {
+                    console.error('FileReader failed to load image');
+                }
+            };
+            reader.onerror = function (e) {
+                console.error('FileReader error:', e);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            console.error('No file selected');
+        }
+    }
     $(document).ready(function () {
+
         var mode = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(mode));
         $('.closeBtn').on('click', function () {
-            debugger;
             // Redirect to the Index page
             window.location.href = '/Students/Index'; // Replace with the correct URL for your Index page
         });
@@ -61,7 +104,6 @@
         loadTabContent('basic-info', mode);
         //handle tab button click
         $('.step-nav').on('click', '.step-button', function () {
-            debugger;
             if ($(this).hasClass('disabled')) return;//ignore disabeld tabs
             //activate the clicked tab
             $('.step-button').removeClass('active');
@@ -73,13 +115,11 @@
 
         //function to load tab content dynamically
         function loadTabContent(tab, pageMode) {
-            debugger;
             $.ajax({
                 url: `/Students/GetTabContent?tab=${tab}&pageMode=${pageMode}&studentId=${$('#StudentID').val()}`,
                 type: 'GET',
                 success: function (response) {
                     if (response.success) {
-                        debugger;
                         $('#tab-content').html(response.html);
                     } else {
                         Swal.fire({

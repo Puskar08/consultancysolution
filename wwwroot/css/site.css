@@ -163,6 +163,26 @@ main p {
   }
 }
 
+
+/* Responsive logo adjustments */
+/* @media (max-width: 768px) {
+  .logo-img {
+    max-width: 80px;
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-img {
+    max-width: 60px;
+    max-height: 40px;
+  }
+
+  #toggle-btn {
+    padding: 0.5em;
+  }
+} */
+
 @media (max-width: 800px) {
   body {
     grid-template-columns: 1fr;
@@ -300,7 +320,7 @@ tr:hover {
 .page {
   display: grid;
   grid-template-columns: 1fr;
-  height: calc(100vh - var(--header-height, 10px));
+  height: calc(100vh - var(--header-height, 40px));
   /* Adjust based on your layout */
   overflow: hidden;
 }
@@ -327,7 +347,7 @@ tr:hover {
   grid-template-rows: auto auto auto;
   gap: 20px;
   padding: 10px;
-  padding-left:0px !important;
+  padding-left: 0px !important;
   margin: 0;
   box-sizing: border-box;
 }

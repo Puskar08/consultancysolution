@@ -214,9 +214,9 @@ public class StudentsController : Controller
         });
     }
     [HttpPost]
-    public IActionResult CreateStudentOnly(Students student)
+    public IActionResult CreateStudentOnly(Students student, IFormFile ProfilePhoto, IFormFile Passport)
     {
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid || !new[] { "Male", "Female", "Other", null }.Contains(student.Gender))
         {
             return Json(new
             {
@@ -225,14 +225,62 @@ public class StudentsController : Controller
                 html = string.Empty
             });
         }
+
         try
         {
-            student.AdmissionCost = 1000; // Default admission cost, can be changed as needed
-            student.Discount = 0; // Default discount, can be changed as needed
-            student.PaidAdmissionAmount = 0; // Default paid amount, can be changed as needed   
-            // Add the student to the database
+            // Handle ProfilePhoto upload
+            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
+            {
+                if (!ProfilePhoto.ContentType.StartsWith("image/"))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Profile photo must be an image file",
+                        html = string.Empty
+                    });
+                }
+                var photoFileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
+                var photoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", photoFileName);
+                using (var stream = new FileStream(photoPath, FileMode.Create))
+                {
+                    ProfilePhoto.CopyTo(stream);
+                }
+                student.ProfilePhotoUrl = $"/uploads/{photoFileName}";
+            }
+
+            // Handle Passport upload
+            if (Passport != null && Passport.Length > 0)
+            {
+                var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+                var extension = Path.GetExtension(Passport.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Passport must be a PDF, DOC, or DOCX file",
+                        html = string.Empty
+                    });
+                }
+                var passportFileName = Guid.NewGuid().ToString() + extension;
+                var passportPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", passportFileName);
+                using (var stream = new FileStream(passportPath, FileMode.Create))
+                {
+                    Passport.CopyTo(stream);
+                }
+                student.PassportUrl = $"/uploads/{passportFileName}";
+            }
+
+            // Set default values
+            student.AdmissionCost = 1000;
+            student.Discount = 0;
+            student.PaidAdmissionAmount = 0;
+
+            // Add to database
             _context.Students.Add(student);
             _context.SaveChanges();
+
             ViewBag.BasicInfoMode = "Edit";
             var htmlContent = RenderPartialViewToString("_BasicInfo", student);
             return Json(new
@@ -252,12 +300,23 @@ public class StudentsController : Controller
                 html = string.Empty
             });
         }
-
     }
+
     [HttpPost]
-    public IActionResult ModifyStudent(Students student)
+    public IActionResult ModifyStudent(Students student, IFormFile ProfilePhoto, IFormFile Passport)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid || !new[] { "Male", "Female", "Other", null }.Contains(student.Gender))
+        {
+            return Json(new
+            {
+                success = false,
+                message = "Invalid student data",
+                studentId = student.Id,
+                html = string.Empty
+            });
+        }
+
+        try
         {
             var existingStudent = _context.Students.FirstOrDefault(s => s.Id == student.Id);
             if (existingStudent == null)
@@ -269,13 +328,77 @@ public class StudentsController : Controller
                     html = string.Empty
                 });
             }
-            // Update the properties you want
+
+            // Update properties
             existingStudent.Name = student.Name;
             existingStudent.Email = student.Email;
             existingStudent.Address = student.Address;
             existingStudent.Phone = student.Phone;
             existingStudent.DateOfBirth = student.DateOfBirth;
             existingStudent.AdmissionDate = student.AdmissionDate;
+            existingStudent.Gender = student.Gender;
+
+            // Handle ProfilePhoto upload
+            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
+            {
+                if (!ProfilePhoto.ContentType.StartsWith("image/"))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Profile photo must be an image file",
+                        html = string.Empty
+                    });
+                }
+                var photoFileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
+                var photoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", photoFileName);
+                using (var stream = new FileStream(photoPath, FileMode.Create))
+                {
+                    ProfilePhoto.CopyTo(stream);
+                }
+                // Delete old photo if it exists
+                if (!string.IsNullOrEmpty(existingStudent.ProfilePhotoUrl))
+                {
+                    var oldPhotoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingStudent.ProfilePhotoUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPhotoPath))
+                    {
+                        System.IO.File.Delete(oldPhotoPath);
+                    }
+                }
+                existingStudent.ProfilePhotoUrl = $"/uploads/{photoFileName}";
+            }
+
+            // Handle Passport upload
+            if (Passport != null && Passport.Length > 0)
+            {
+                var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+                var extension = Path.GetExtension(Passport.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Passport must be a PDF, DOC, or DOCX file",
+                        html = string.Empty
+                    });
+                }
+                var passportFileName = Guid.NewGuid().ToString() + extension;
+                var passportPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", passportFileName);
+                using (var stream = new FileStream(passportPath, FileMode.Create))
+                {
+                    Passport.CopyTo(stream);
+                }
+                // Delete old passport if it exists
+                if (!string.IsNullOrEmpty(existingStudent.PassportUrl))
+                {
+                    var oldPassportPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingStudent.PassportUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPassportPath))
+                    {
+                        System.IO.File.Delete(oldPassportPath);
+                    }
+                }
+                existingStudent.PassportUrl = $"/uploads/{passportFileName}";
+            }
 
             _context.SaveChanges();
             ViewBag.BasicInfoMode = "Edit";
@@ -288,13 +411,15 @@ public class StudentsController : Controller
                 html = htmlContent
             });
         }
-        return Json(new
+        catch (Exception ex)
         {
-            success = false,
-            message = "Invalid student data",
-            studentId = student.Id,
-            html = string.Empty
-        });
+            return Json(new
+            {
+                success = false,
+                message = "Error updating student: " + ex.Message,
+                html = string.Empty
+            });
+        }
     }
 
     [HttpPost]
